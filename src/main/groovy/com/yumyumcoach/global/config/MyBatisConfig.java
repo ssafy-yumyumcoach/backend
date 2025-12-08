@@ -4,6 +4,6 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@MapperScan("com.yumyumcoach.domain")
+@MapperScan("com.yumyumcoach")
 public class MyBatisConfig {
 }
