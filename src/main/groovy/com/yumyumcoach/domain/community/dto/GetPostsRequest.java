@@ -17,11 +17,13 @@ public class GetPostsRequest {
     /**
      * 1부터 시작하는 페이지 번호 (기본값 1)
      */
+    @Builder.Default
     private int page = 1;
 
     /**
      * 페이지 사이즈 (기본값 20)
      */
+    @Builder.Default
     private int size = 20;
 
     /**
