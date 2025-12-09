@@ -19,10 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PostService {
-    //    private final PostRepository postRepository;
-    //    private final PostImageRepository postImageRepository;
-    //    private final PostLikeRepository postLikeRepository;
-    //    private final PostCommentRepository postCommentRepository;
+//    private final PostMapper postMapper;
+//    private final PostImageMapper postImageMapper;
+//    private final PostLikeMapper postLikeMapper;
+//    private final PostCommentMapper postCommentMapper;
 
     /**
      * 전체 게시글 목록(피드) 조회

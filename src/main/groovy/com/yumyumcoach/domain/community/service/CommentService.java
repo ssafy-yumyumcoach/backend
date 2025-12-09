@@ -17,8 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CommentService {
-    //    private final PostRepository postRepository;
-    //    private final PostCommentRepository postCommentRepository;
+//    private final PostMapper postMapper;
+//    private final PostCommentMapper postCommentMapper;
 
     /**
      * 특정 게시글의 댓글 목록 조회
