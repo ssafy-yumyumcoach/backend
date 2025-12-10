@@ -21,14 +21,14 @@ public class CommentController {
 
     // 특정 게시글의 댓글 목록 조회
     @GetMapping
-    public GetCommentsResponse getComments(@PathVariable Long postId) {
+    public GetCommentsResponse getComments(@PathVariable("postId") Long postId) {
         return commentService.getComments(postId);
     }
 
     // 댓글 작성
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CommentResponse createComment(@PathVariable Long postId,
+    public CommentResponse createComment(@PathVariable("postId") Long postId,
                                          @RequestBody CommentRequest request) {
         Long loginUserId = 1L; // TODO: 인증 연동 후 실제 사용자 ID 주입
         return commentService.createComment(loginUserId, postId, request);
@@ -36,8 +36,8 @@ public class CommentController {
 
     // 댓글 수정
     @PutMapping("/{commentId}")
-    public CommentResponse updateComment(@PathVariable Long postId,
-                                         @PathVariable Long commentId,
+    public CommentResponse updateComment(@PathVariable("postId") Long postId,
+                                         @PathVariable("commentId") Long commentId,
                                          @RequestBody CommentRequest request) {
         Long loginUserId = 1L; // TODO
         return commentService.updateComment(loginUserId, postId, commentId, request);
@@ -46,8 +46,8 @@ public class CommentController {
     // 댓글 삭제
     @DeleteMapping("/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteComment(@PathVariable Long postId,
-                              @PathVariable Long commentId) {
+    public void deleteComment(@PathVariable("postId") Long postId,
+                              @PathVariable("commentId") Long commentId) {
         Long loginUserId = 1L; // TODO
         commentService.deleteComment(loginUserId, postId, commentId);
     }

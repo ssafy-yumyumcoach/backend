@@ -28,7 +28,7 @@ public class PostController {
 
     // 게시글 상세 조회
     @GetMapping("/{postId}")
-    public PostResponse getPost(@PathVariable Long postId) {
+    public PostResponse getPost(@PathVariable("postId") Long postId) {
         Long loginUserId = 1L; // TODO: 인증 연동 후 교체
         return postService.getPost(postId, loginUserId);
     }
@@ -43,7 +43,7 @@ public class PostController {
 
     // 게시글 수정
     @PutMapping("/{postId}")
-    public PostResponse updatePost(@PathVariable Long postId, @RequestBody PostRequest request) {
+    public PostResponse updatePost(@PathVariable("postId") Long postId, @RequestBody PostRequest request) {
         Long loginUserId = 1L; // TODO: 인증 연동 후 교체
         return postService.updatePost(loginUserId, postId, request);
     }
@@ -51,7 +51,7 @@ public class PostController {
     // 게시글 삭제
     @DeleteMapping("/{postId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletePost(@PathVariable Long postId) {
+    public void deletePost(@PathVariable("postId") Long postId) {
         Long loginUserId = 1L; // TODO: 인증 연동 후 교체
         postService.deletePost(loginUserId, postId);
     }
@@ -59,7 +59,7 @@ public class PostController {
     // 게시글 좋아요
     @PostMapping("/{postId}/like")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void likePost(@PathVariable Long postId) {
+    public void likePost(@PathVariable("postId") Long postId) {
         Long loginUserId = 1L; // TODO: 인증 연동 후 교체
         postService.likePost(loginUserId, postId);
     }
@@ -67,7 +67,7 @@ public class PostController {
     // 게시글 좋아요 취소
     @DeleteMapping("/{postId}/like")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void unlikePost(@PathVariable Long postId) {
+    public void unlikePost(@PathVariable("postId") Long postId) {
         Long loginUserId = 1L; // TODO: 인증 연동 후 교체
         postService.unlikePost(loginUserId, postId);
     }
