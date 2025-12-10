@@ -15,15 +15,17 @@ public class Post {
     private Long id;
     private String title;
     private String content;
-    private String category;
+//    private String category;
     private LocalDateTime createdAt;
     private int likes;
     private String authorEmail;
 
-    public void update(String title, String content, String category) {
+    // 나중에 category 추가시 주석 풀기
+//    public void update(String title, String content, String category) {
+    public void update(String title, String content) {
         this.title = title;
         this.content = content;
-        this.category = category;
+//        this.category = category;
     }
 
     public void increaseLikes() {
@@ -34,11 +36,13 @@ public class Post {
         this.likes--;
     }
 
-    public static Post newPost(String title, String content, String category, String authorEmail) {
+    // 나중에 category 추가시 주석 풀기
+//    public static Post newPost(String title, String content, String category, String authorEmail) {
+    public static Post newPost(String title, String content, String authorEmail) {
         return Post.builder()
                 .title(title)
                 .content(content)
-                .category(category)
+//                .category(category)
                 .authorEmail(authorEmail)
                 .createdAt(LocalDateTime.now())
                 .likes(0)
