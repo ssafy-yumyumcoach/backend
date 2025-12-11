@@ -50,9 +50,4 @@ public class CommentResponse {
      * 댓글 작성 시각
      */
     private LocalDateTime createdAt;
-
-    /**
-     * 댓글 마지막 수정 시각
-     */
-    private LocalDateTime updatedAt;
 }

@@ -4,9 +4,21 @@ import com.yumyumcoach.domain.community.dto.GetPostsRequest;
 import com.yumyumcoach.domain.community.dto.GetPostsResponse;
 import com.yumyumcoach.domain.community.dto.PostRequest;
 import com.yumyumcoach.domain.community.dto.PostResponse;
+import com.yumyumcoach.domain.community.entity.Post;
+import com.yumyumcoach.domain.community.entity.PostImage;
+import com.yumyumcoach.domain.community.entity.PostLike;
+import com.yumyumcoach.domain.community.mapper.PostCommentMapper;
+import com.yumyumcoach.domain.community.mapper.PostImageMapper;
+import com.yumyumcoach.domain.community.mapper.PostLikeMapper;
+import com.yumyumcoach.domain.community.mapper.PostMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Community 게시글 관련 서비스.
@@ -19,10 +31,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PostService {
-//    private final PostMapper postMapper;
-//    private final PostImageMapper postImageMapper;
-//    private final PostLikeMapper postLikeMapper;
-//    private final PostCommentMapper postCommentMapper;
+    private final PostMapper postMapper;
+    private final PostImageMapper postImageMapper;
+    private final PostLikeMapper postLikeMapper;
+    private final PostCommentMapper postCommentMapper;
 
     /**
      * 전체 게시글 목록(피드) 조회
@@ -31,9 +43,71 @@ public class PostService {
     public GetPostsResponse getPosts(GetPostsRequest request, Long loginUserId) {
         // TODO:
         // 1) request.getPage(), request.getSize()를 사용해 페이징 조회
-        // 2) Post + 이미지/댓글/좋아요 개수를 조합하여 List<PostResponse> 생성
-        // 3) GetPostsResponse에 page/size/totalCount/posts 세팅
-        return null;
+        int page = request.getPage();
+        int size = request.getSize();
+        int offset = (page - 1) * size;
+
+        String keyword = request.getKeyword();
+        String sort = request.getSort();
+
+        // 2) 게시글 목록 조회
+        List<Post> posts = postMapper.findPosts(offset, size, keyword, sort);
+        if (posts.isEmpty()) {
+            return GetPostsResponse.builder()
+                    .page(page)
+                    .size(size)
+                    .totalCount(0L)
+                    .posts(Collections.emptyList())
+                    .build();
+        }
+
+        // TODO: loginUserId -> email (User/Auth 도메인 연동 후)
+        String loginUserEmail = (loginUserId != null) ? "todo@example.com" : null;
+
+        // 3) Post -> PostResponse 매핑
+        List<PostResponse> postResponses = posts.stream()
+                .map(post -> {
+                    Long postId = post.getId();
+                    // 이미지 목록
+                    List<PostImage> postImages = postImageMapper.findByPostId(postId);
+                    List<String> imageUrls = postImages.stream()
+                            .map(PostImage::getImageUrl)
+                            .toList();
+                    // 댓글 개수
+                    long commentCount = postCommentMapper.countByPostId(postId);
+                    // 좋아요 개수 (posts.likes)
+                    int likeCount = post.getLikes();
+                    // 내가 좋아요 눌렀는지 여부
+                    boolean isLikedByMe = false;
+                    if (loginUserEmail != null) {
+                        isLikedByMe = postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
+                    }
+
+                    return PostResponse.builder()
+                            .postId(postId)
+                            // User 도메인 연동 전 : 일단 author 관련은 null로 세팅
+                            .authorId(null)
+                            .authorUsername(null)
+                            .authorProfileImageUrl(null)
+                            .title(post.getTitle())
+                            .content(post.getContent())
+                            .images(imageUrls)
+                            .likeCount(likeCount)
+                            .commentCount((int) commentCount)
+                            .isLikedByMe(isLikedByMe)
+                            .createdAt(post.getCreatedAt())
+                            .updatedAt(null)
+                            .build();
+                }).toList();
+
+        // 4) 전체 개수 조회
+        long totalCount = postMapper.countPosts(keyword);
+        return GetPostsResponse.builder()
+                .page(page)
+                .size(size)
+                .totalCount(totalCount)
+                .posts(postResponses)
+                .build();
     }
 
     /**
@@ -41,11 +115,47 @@ public class PostService {
      * - GET /api/posts/{postId}
      */
     public PostResponse getPost(Long postId, Long loginUserId) {
-        // TODO:
-        // 1) postId로 게시글 조회 (없으면 예외 발생)
-        // 2) 이미지 목록, 댓글 수, 좋아요 수, isLikedByMe(post_likes 기반) 조회
-        // 3) PostResponse로 매핑해 반환
-        return null;
+        // 1) 게시글 조회
+        Post post = postMapper.findById(postId);
+        if (post == null) {
+            // TODO: 커스텀 예외(PostNotFoundException)로 교체
+            throw new IllegalArgumentException("해당 게시글을 찾을 수 없습니다. postId=" + postId);
+        }
+
+        // 2) 이미지 목록 조회
+        List<PostImage> postImages = postImageMapper.findByPostId(postId);
+        List<String> imageUrls = postImages.stream()
+                .map(PostImage::getImageUrl)
+                .toList();
+
+        // 3) 댓글 개수 조회
+        long commentCount = postCommentMapper.countByPostId(postId);
+
+        // 4) 좋아요 개수 (posts.likes)
+        int likeCount = post.getLikes();
+
+        // 5) 현재 유저가 좋아요 눌렀는지 여부
+        boolean isLikedByMe = false;
+        if (loginUserId != null) {
+            // TODO: loginUserId -> email 변환 (User/Auth 도메인 연동 후 수정)
+            String loginUserEmail = "todo@example.com";
+            isLikedByMe = postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
+        }
+
+        return PostResponse.builder()
+                .postId(post.getId())
+                .authorId(null)                 // TODO: User 도메인 연동 후 세팅
+                .authorUsername(null)
+                .authorProfileImageUrl(null)
+                .title(post.getTitle())
+                .content(post.getContent())
+                .images(imageUrls)
+                .likeCount(likeCount)
+                .commentCount((int) commentCount)
+                .isLikedByMe(isLikedByMe)
+                .createdAt(post.getCreatedAt())
+                .updatedAt(null)
+                .build();
     }
 
     /**
@@ -54,11 +164,48 @@ public class PostService {
      */
     @Transactional
     public PostResponse createPost(Long loginUserId, PostRequest request) {
-        // TODO:
-        // 1) 로그인 유저 정보(loginUserId / email) 기준으로 Post 엔티티 생성/저장
-        // 2) request.getImages() 기반으로 PostImage 엔티티들 생성/저장
-        // 3) 저장된 결과를 PostResponse로 매핑해 반환
-        return null;
+        // TODO: loginUserId -> email, authorId 변환 (User/Auth 도메인 연동)
+        String authorEmail = "todo@example.com";
+
+        // 1) Post 엔티티 생성
+        Post post = Post.builder()
+                .authorEmail(authorEmail)
+                .title(request.getTitle())
+                .content(request.getContent())
+                .createdAt(LocalDateTime.now())
+                .likes(0)
+                .build();
+
+        // 2) posts 테이블 INSERT (id 자동 생성)
+        postMapper.insert(post); // useGeneratedKeys="true" 로 인해 post.id 세팅됨
+        Long postId = post.getId();
+
+        // 3) 이미지가 있다면 post_images에 INSERT
+        List<String> images = request.getImages() != null ? request.getImages() : Collections.emptyList();
+        int orderIndex = 1;
+        for (String imageUrl : images) {
+            PostImage postImage = PostImage.builder()
+                    .postId(postId)
+                    .imageUrl(imageUrl)
+                    .orderIndex(orderIndex++)
+                    .build();
+            postImageMapper.insert(postImage);
+        }
+
+        return PostResponse.builder()
+                .postId(postId)
+                .authorId(null)               // TODO: User 도메인 연동 후 세팅
+                .authorUsername(null)
+                .authorProfileImageUrl(null)
+                .title(post.getTitle())
+                .content(post.getContent())
+                .images(images)
+                .likeCount(0)
+                .commentCount(0)
+                .isLikedByMe(false)
+                .createdAt(post.getCreatedAt())
+                .updatedAt(null)
+                .build();
     }
 
     /**
@@ -67,12 +214,59 @@ public class PostService {
      */
     @Transactional
     public PostResponse updatePost(Long loginUserId, Long postId, PostRequest request) {
-        // TODO:
-        // 1) postId로 게시글 조회 후, 작성자(loginUserId) 권한 체크
-        // 2) title, content 수정
-        // 3) 이미지 목록 재구성 (기존 PostImage 제거 후 새로 저장 등)
-        // 4) 수정 결과를 PostResponse로 매핑해 반환
-        return null;
+        // 1) 기존 게시글 조회
+        Post existing = postMapper.findById(postId);
+        if (existing == null) {
+            // TODO: 커스텀 예외
+            throw new IllegalArgumentException("해당 게시글을 찾을 수 없습니다. postId=" + postId);
+        }
+
+        // TODO: loginUserId -> email 변환 후, 작성자(authorEmail)와 동일한지 체크
+
+        // 2) 제목/내용 수정
+        Post post = Post.builder()
+                .id(postId)
+                .title(request.getTitle())
+                .content(request.getContent())
+                .build();
+        postMapper.update(post);
+
+        // 3) 이미지 -> 기존 이미지 삭제 후 새로 저장
+        postImageMapper.deleteByPostId(postId);
+        List<String> images = request.getImages() != null ? request.getImages() : Collections.emptyList();
+        int orderIndex = 1;
+        for (String imageUrl : images) {
+            PostImage postImage = PostImage.builder()
+                    .postId(postId)
+                    .imageUrl(imageUrl)
+                    .orderIndex(orderIndex++)
+                    .build();
+            postImageMapper.insert(postImage);
+        }
+
+        // 4) 댓글 수, 좋아요 수, isLikedByMe 다시 조회
+        long commentCount = postCommentMapper.countByPostId(postId);
+        int likeCount = post.getLikes();
+        boolean isLikedByMe = false;
+        if (loginUserId != null) {
+            String loginUserEmail = "todo@example.com"; // TODO
+            isLikedByMe =  postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
+        }
+
+        return PostResponse.builder()
+                .postId(postId)
+                .authorId(null)
+                .authorUsername(null)
+                .authorProfileImageUrl(null)
+                .title(request.getTitle())
+                .content(request.getContent())
+                .images(images)
+                .likeCount(likeCount)
+                .commentCount((int) commentCount)
+                .isLikedByMe(isLikedByMe)
+                .createdAt(existing.getCreatedAt())
+                .updatedAt(null)
+                .build();
     }
 
     /**
@@ -81,10 +275,21 @@ public class PostService {
      */
     @Transactional
     public void deletePost(Long loginUserId, Long postId) {
-        // TODO:
-        // 1) postId로 게시글 조회 후, 작성자 권한 체크
-        // 2) 관련 이미지, 댓글, 좋아요 등 연관 데이터 정리
-        // 3) 게시글 삭제
+        Post existing = postMapper.findById(postId);
+        if (existing == null) {
+            // TODO : 커스텀 예외
+            return;
+        }
+
+        // TODO: loginUserId -> email 변환 후, 작성자(authorEmail)와 동일한지 권한 체크
+
+        // 1) 연관 데이터 삭제
+        postImageMapper.deleteByPostId(postId);
+        postCommentMapper.deleteByPostId(postId);
+        // TODO: post_likes 전체 삭제용 메서드(PostLikeMapper.deleteByPostId) 추가해서 호출하면 더 깔끔함
+
+        // 2) 게시글 삭제
+        postMapper.delete(postId);
     }
 
     /**
@@ -93,9 +298,26 @@ public class PostService {
      */
     @Transactional
     public void likePost(Long loginUserId, Long postId) {
-        // TODO:
-        // 1) 이미 해당 유저가 좋아요 눌렀는지 확인 (post_likes exists 여부)
-        // 2) 없으면 PostLike 생성 + Post.likes 컬럼 증가
+        // TODO: loginUserId -> email 변환 (User/Auth 도메인 연동)
+        String authorEmail = "todo@example.com";
+
+        // 1) 이미 좋아요 눌렀는지 확인
+        boolean alreadyLiked = postLikeMapper.existsByPostIdAndAuthorEmail(postId, authorEmail);
+        if (alreadyLiked) {
+            // TODO: 이미 좋아요인 상태면 커스텀 예외
+            return;
+        }
+
+        // 2) 좋아요 INSERT
+        PostLike like = PostLike.builder()
+                .postId(postId)
+                .authorEmail(authorEmail)
+                .createdAt(LocalDateTime.now())
+                .build();
+        postLikeMapper.insert(like);
+
+        // 3) posts.likes +1
+        postMapper.increaseLikes(postId);
     }
 
     /**
@@ -104,8 +326,20 @@ public class PostService {
      */
     @Transactional
     public void unlikePost(Long loginUserId, Long postId) {
-        // TODO:
-        // 1) post_likes에서 (postId, user) 레코드 삭제
-        // 2) Post.likes 컬럼 감소
+        // TODO: loginUserId -> email 변환 (User/Auth 도메인 연동)
+        String authorEmail = "todo@example.com";
+
+        // 1) 좋아요가 존재하는지 확인
+        boolean alreadyLiked = postLikeMapper.existsByPostIdAndAuthorEmail(postId, authorEmail);
+        if (!alreadyLiked) {
+            // TODO: 이미 좋아요가 아닌 상태면 커스텀 예외
+            return;
+        }
+
+        // 2) post_likes 에서 삭제
+        postLikeMapper.deleteByPostIdAndAuthorEmail(postId, authorEmail);
+
+        // 3) posts.likes -1
+        postMapper.decreaseLikes(postId);
     }
 }
