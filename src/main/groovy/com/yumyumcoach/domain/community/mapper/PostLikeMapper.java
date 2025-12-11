@@ -1,6 +1,8 @@
 package com.yumyumcoach.domain.community.mapper;
 
+import com.yumyumcoach.domain.community.entity.PostLike;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface PostLikeMapper {
