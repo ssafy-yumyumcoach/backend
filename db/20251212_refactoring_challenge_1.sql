@@ -29,3 +29,8 @@ DROP TABLE IF EXISTS challenge_types;
 
 ALTER TABLE challenges
     ADD COLUMN challenge_type VARCHAR(20) NOT NULL DEFAULT 'PUBLIC';
+
+ALTER TABLE challenge_participants
+    ADD COLUMN success_days INT NOT NULL DEFAULT 0
+        AFTER progress_percentage;
+

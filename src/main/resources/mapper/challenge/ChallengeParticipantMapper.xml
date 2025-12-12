@@ -32,6 +32,7 @@
             required_success_days,
             daily_target_value,
             progress_percentage,
+            success_days,
             last_evaluated_at,
             completed_at
         FROM challenge_participants
@@ -58,6 +59,7 @@
             required_success_days,
             daily_target_value,
             progress_percentage,
+            success_days,
             last_evaluated_at,
             completed_at
         ) VALUES (
@@ -69,6 +71,7 @@
                      #{requiredSuccessDays},
                      #{dailyTargetValue},
                      #{progressPercentage},
+                     #{successDays},
                      #{lastEvaluatedAt},
                      #{completedAt}
                  )

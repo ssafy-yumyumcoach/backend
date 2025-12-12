@@ -62,6 +62,12 @@ public class ChallengeParticipant {
     private Double progressPercentage;
 
     /**
+     * 성공한 일수
+     * 조건을 만족한 날짜 수를 캐싱해두는 값
+     */
+    private Integer successDays;
+
+    /**
      * 마지막으로 진행률/성공 일수를 계산한 시각
      */
     private LocalDateTime lastEvaluatedAt;
@@ -100,6 +106,9 @@ public class ChallengeParticipant {
                 .requiredSuccessDays(requiredSuccessDays)
                 .dailyTargetValue(dailyTargetValue)
                 .progressPercentage(0.0)
+                .successDays(0)
+                .lastEvaluatedAt(null)
+                .completedAt(null)
                 .build();
     }
 
@@ -127,10 +136,12 @@ public class ChallengeParticipant {
     /**
      * 진행률과 마지막 평가 시각을 갱신한다.
      *
+     * @param successDays        성공한 일수
      * @param progressPercentage 새 진행률 (0.0 ~ 100.0)
      * @param evaluatedAt        평가 시각
      */
-    public void updateProgress(Double progressPercentage, LocalDateTime evaluatedAt) {
+    public void updateProgress(Integer successDays, Double progressPercentage, LocalDateTime evaluatedAt) {
+        this.successDays = successDays;
         this.progressPercentage = progressPercentage;
         this.lastEvaluatedAt = evaluatedAt;
     }
