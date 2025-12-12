@@ -9,17 +9,23 @@ public class DietFoods {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "diet_id", nullable = false, unique = true)
+  @JoinColumn(name = "diet_id", nullable = false, unique = true) // 어느 식단에 해당하는 음식인지
   private DietRecords dietId;
-  @Column(name = "order_index", nullable = false, unique = true)
+  
+  @Column(name = "order_index", nullable = false, unique = true) // 식단에 등록되는 음식의 순서
   private Integer orderIndex;
+  
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "food_id", nullable = false)
+  @JoinColumn(name = "food_id", nullable = false) // 하나의 식단에 여러 음식이 있을 수 있음
   private Foods foodId;
+  
   @Column(name = "weight", nullable = true)
   private Double weight;
+  
   protected DietFoods() {}
+  
   public DietFoods(DietRecords dietId, Integer orderIndex, Foods foodId, Double weight) {
     this.dietId = dietId;
     this.orderIndex = orderIndex;
