@@ -55,7 +55,7 @@ public class ChallengeResponse {
 
     /**
      * 챌린지 타입 코드
-     * 예) "PUBLIC"
+     * 예) "PUBLIC"(운영자 생성), "USER"(사용자 생성)
      */
     private String type;
 
@@ -76,12 +76,6 @@ public class ChallengeResponse {
      * 예) 2025-11-30
      */
     private String endDate;
-
-    /**
-     * 추천 난이도 코드
-     * 예) "BEGINNER", "INTERMEDIATE", "ADVANCED"
-     */
-    private String recommendedDifficulty;
 
     /**
      * 현재 챌린지에 참여 중인 인원 수

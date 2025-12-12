@@ -11,11 +11,10 @@
         <result property="rewardTitleId"    column="reward_title_id"/>
         <result property="name"             column="name"/>
         <result property="shortDescription" column="short_description"/>
-        <result property="difficultyCode"   column="difficulty_code"/>
         <result property="goalSummary"      column="goal_summary"/>
         <result property="ruleDescription"  column="rule_description"/>
-        <result property="typeCode"         column="type_code"/>
         <result property="imageUrl"         column="image_url"/>
+        <result property="challengeType"    column="challenge_type"/>
         <result property="recruitStartDate" column="recruit_start_date"/>
         <result property="recruitEndDate"   column="recruit_end_date"/>
         <result property="startDate"        column="start_date"/>
@@ -30,11 +29,10 @@
                reward_title_id,
                name,
                short_description,
-               difficulty_code,
                goal_summary,
                rule_description,
-               type_code,
                image_url,
+               challenge_type,
                recruit_start_date,
                recruit_end_date,
                start_date,
@@ -54,11 +52,10 @@
             reward_title_id,
             name,
             short_description,
-            difficulty_code,
             goal_summary,
             rule_description,
-            type_code,
             image_url,
+            challenge_type,
             recruit_start_date,
             recruit_end_date,
             start_date,

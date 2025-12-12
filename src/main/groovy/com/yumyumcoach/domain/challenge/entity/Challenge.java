@@ -66,6 +66,12 @@ public class Challenge {
     private String imageUrl;
 
     /**
+     * 챌린지 타입
+     * 예) PUBLIC(운영자), USER(사용자 생성)
+     */
+    private String challengeType;
+
+    /**
      * 모집 시작일
      * 이 날짜부터 챌린지 참여 신청이 가능함
      */
