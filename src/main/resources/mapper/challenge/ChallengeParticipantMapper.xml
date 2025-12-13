@@ -102,4 +102,11 @@
           AND email = #{email}
     </delete>
 
+    <!-- 특정 챌린지에 참여한 전체 인원 수 조회 -->
+    <select id="countByChallengeId" resultType="int">
+        SELECT COUNT(*)
+        FROM challenge_participants
+        WHERE challenge_id = #{challengeId}
+    </select>
+
 </mapper>
