@@ -7,6 +7,8 @@ import com.yumyumcoach.domain.challenge.mapper.ChallengeMapper;
 import com.yumyumcoach.domain.challenge.mapper.ChallengeParticipantMapper;
 import com.yumyumcoach.domain.challenge.model.DifficultyCode;
 import com.yumyumcoach.domain.challenge.model.GoalType;
+import com.yumyumcoach.global.error.BusinessException;
+import com.yumyumcoach.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -62,8 +63,7 @@ public class ChallengeService {
     public ChallengeResponse getChallengeDetail(Long challengeId, String email) {
         Challenge challenge = challengeMapper.findById(challengeId);
         if (challenge == null) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalArgumentException("존재하지 않는 챌린지입니다. id=" + challengeId);
+            throw new BusinessException(ErrorCode.CHALLENGE_NOT_FOUND);
         }
 
         ChallengeParticipant participant = challengeParticipantMapper.findByChallengeIdAndEmail(challengeId, email);
@@ -82,15 +82,13 @@ public class ChallengeService {
         // 1) 챌린지 존재 여부 확인
         Challenge challenge = challengeMapper.findById(challengeId);
         if (challenge == null) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalArgumentException("존재하지 않는 챌린지입니다. id=" + challengeId);
+            throw new BusinessException(ErrorCode.CHALLENGE_NOT_FOUND);
         }
 
         // 2) 이미 참여 중인지 체크
         int existing = challengeParticipantMapper.existsByChallengeIdAndEmail(challengeId, email);
         if (existing > 0) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalStateException("이미 참여 중인 챌린지입니다.");
+            throw new BusinessException(ErrorCode.CHALLENGE_ALREADY_JOINED);
         }
 
         // 3) 난이도 및 목표 타입 결정
@@ -143,19 +141,16 @@ public class ChallengeService {
         // 1) 챌린지 존재 여부 확인
         Challenge challenge = challengeMapper.findById(challengeId);
         if (challenge == null) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalArgumentException("존재하지 않는 챌린지입니다. id=" + challengeId);
+            throw new BusinessException(ErrorCode.CHALLENGE_NOT_FOUND);
         }
 
         // 2) 참여중이지 않은지 체크
         ChallengeParticipant existing = challengeParticipantMapper.findByChallengeIdAndEmail(challengeId, email);
         if (existing == null) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalStateException("참여 이력이 없는 챌린지입니다.");
+            throw new BusinessException(ErrorCode.CHALLENGE_JOIN_NOT_FOUND);
         }
         if ("left".equalsIgnoreCase(existing.getStatus())) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalStateException("이미 나간 챌린지입니다.");
+            throw new BusinessException(ErrorCode.CHALLENGE_ALREADY_LEFT);
         }
 
         // 3) 챌린지 시작 전 -> 사전 신청 취소 -> row 삭제 / 챌린지 시작 후 → 중도 탈퇴 → status = 'left' 로 변경

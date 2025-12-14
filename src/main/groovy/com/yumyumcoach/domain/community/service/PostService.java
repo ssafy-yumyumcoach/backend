@@ -11,6 +11,8 @@ import com.yumyumcoach.domain.community.mapper.PostCommentMapper;
 import com.yumyumcoach.domain.community.mapper.PostImageMapper;
 import com.yumyumcoach.domain.community.mapper.PostLikeMapper;
 import com.yumyumcoach.domain.community.mapper.PostMapper;
+import com.yumyumcoach.global.error.BusinessException;
+import com.yumyumcoach.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Community 게시글 관련 서비스.
@@ -36,11 +37,17 @@ public class PostService {
     private final PostLikeMapper postLikeMapper;
     private final PostCommentMapper postCommentMapper;
 
+    private void requireEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new BusinessException(ErrorCode.AUTH_UNAUTHORIZED);
+        }
+    }
+
     /**
      * 전체 게시글 목록(피드) 조회
      * - GET /api/posts
      */
-    public GetPostsResponse getPosts(GetPostsRequest request, Long loginUserId) {
+    public GetPostsResponse getPosts(GetPostsRequest request, String loginUserEmail) {
         // TODO:
         // 1) request.getPage(), request.getSize()를 사용해 페이징 조회
         int page = request.getPage();
@@ -60,9 +67,6 @@ public class PostService {
                     .posts(Collections.emptyList())
                     .build();
         }
-
-        // TODO: loginUserId -> email (User/Auth 도메인 연동 후)
-        String loginUserEmail = (loginUserId != null) ? "todo@example.com" : null;
 
         // 3) Post -> PostResponse 매핑
         List<PostResponse> postResponses = posts.stream()
@@ -114,12 +118,13 @@ public class PostService {
      * 게시글 상세 조회
      * - GET /api/posts/{postId}
      */
-    public PostResponse getPost(Long postId, Long loginUserId) {
+    public PostResponse getPost(Long postId, String loginUserEmail) {
+        requireEmail(loginUserEmail);
+
         // 1) 게시글 조회
         Post post = postMapper.findById(postId);
         if (post == null) {
-            // TODO: 커스텀 예외(PostNotFoundException)로 교체
-            throw new IllegalArgumentException("해당 게시글을 찾을 수 없습니다. postId=" + postId);
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
         }
 
         // 2) 이미지 목록 조회
@@ -135,12 +140,7 @@ public class PostService {
         int likeCount = post.getLikes();
 
         // 5) 현재 유저가 좋아요 눌렀는지 여부
-        boolean isLikedByMe = false;
-        if (loginUserId != null) {
-            // TODO: loginUserId -> email 변환 (User/Auth 도메인 연동 후 수정)
-            String loginUserEmail = "todo@example.com";
-            isLikedByMe = postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
-        }
+        boolean isLikedByMe =  postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
 
         return PostResponse.builder()
                 .postId(post.getId())
@@ -163,13 +163,12 @@ public class PostService {
      * - POST /api/posts
      */
     @Transactional
-    public PostResponse createPost(Long loginUserId, PostRequest request) {
-        // TODO: loginUserId -> email, authorId 변환 (User/Auth 도메인 연동)
-        String authorEmail = "todo@example.com";
+    public PostResponse createPost(String loginUserEmail, PostRequest request) {
+        requireEmail(loginUserEmail);
 
         // 1) Post 엔티티 생성
         Post post = Post.builder()
-                .authorEmail(authorEmail)
+                .authorEmail(loginUserEmail)
                 .title(request.getTitle())
                 .content(request.getContent())
                 .createdAt(LocalDateTime.now())
@@ -213,15 +212,20 @@ public class PostService {
      * - PUT /api/posts/{postId}
      */
     @Transactional
-    public PostResponse updatePost(Long loginUserId, Long postId, PostRequest request) {
+    public PostResponse updatePost(String loginUserEmail, Long postId, PostRequest request) {
+        requireEmail(loginUserEmail);
+
         // 1) 기존 게시글 조회
         Post existing = postMapper.findById(postId);
         if (existing == null) {
-            // TODO: 커스텀 예외
-            throw new IllegalArgumentException("해당 게시글을 찾을 수 없습니다. postId=" + postId);
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
         }
 
-        // TODO: loginUserId -> email 변환 후, 작성자(authorEmail)와 동일한지 체크
+        // 403: 작성자만 수정 가능
+        if (existing.getAuthorEmail() == null ||
+                !existing.getAuthorEmail().equalsIgnoreCase(loginUserEmail)) {
+            throw new BusinessException(ErrorCode.POST_FORBIDDEN);
+        }
 
         // 2) 제목/내용 수정
         Post post = Post.builder()
@@ -246,12 +250,8 @@ public class PostService {
 
         // 4) 댓글 수, 좋아요 수, isLikedByMe 다시 조회
         long commentCount = postCommentMapper.countByPostId(postId);
-        int likeCount = post.getLikes();
-        boolean isLikedByMe = false;
-        if (loginUserId != null) {
-            String loginUserEmail = "todo@example.com"; // TODO
-            isLikedByMe =  postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
-        }
+        int likeCount = existing.getLikes();
+        boolean isLikedByMe =   postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
 
         return PostResponse.builder()
                 .postId(postId)
@@ -274,14 +274,19 @@ public class PostService {
      * - DELETE /api/posts/{postId}
      */
     @Transactional
-    public void deletePost(Long loginUserId, Long postId) {
+    public void deletePost(String loginUserEmail, Long postId) {
+        requireEmail(loginUserEmail);
+
         Post existing = postMapper.findById(postId);
         if (existing == null) {
-            // TODO : 커스텀 예외
-            return;
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
         }
 
-        // TODO: loginUserId -> email 변환 후, 작성자(authorEmail)와 동일한지 권한 체크
+        // 403: 작성자만 삭제 가능
+        if (existing.getAuthorEmail() == null ||
+                !existing.getAuthorEmail().equalsIgnoreCase(loginUserEmail)) {
+            throw new BusinessException(ErrorCode.POST_FORBIDDEN);
+        }
 
         // 1) 연관 데이터 삭제
         postImageMapper.deleteByPostId(postId);
@@ -297,24 +302,27 @@ public class PostService {
      * - POST /api/posts/{postId}/like
      */
     @Transactional
-    public void likePost(Long loginUserId, Long postId) {
-        // TODO: loginUserId -> email 변환 (User/Auth 도메인 연동)
-        String authorEmail = "todo@example.com";
+    public void likePost(String loginUserEmail, Long postId) {
+        requireEmail(loginUserEmail);
 
-        // 1) 이미 좋아요 눌렀는지 확인
-        boolean alreadyLiked = postLikeMapper.existsByPostIdAndAuthorEmail(postId, authorEmail);
-        if (alreadyLiked) {
-            // TODO: 이미 좋아요인 상태면 커스텀 예외
-            return;
+        // 1) 해당 게시글이 존재하는지 확인
+        Post post = postMapper.findById(postId);
+        if (post == null) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
         }
 
-        // 2) 좋아요 INSERT
-        PostLike like = PostLike.builder()
+        // 2) 이미 좋아요 눌렀는지 확인
+        boolean alreadyLiked = postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
+        if (alreadyLiked) {
+            throw new BusinessException(ErrorCode.LIKE_ALREADY_EXISTS, "좋아요를 누를 게시글을 찾을 수 없습니다.");
+        }
+
+        // 3) 좋아요 INSERT
+        postLikeMapper.insert(PostLike.builder()
                 .postId(postId)
-                .authorEmail(authorEmail)
+                .authorEmail(loginUserEmail)
                 .createdAt(LocalDateTime.now())
-                .build();
-        postLikeMapper.insert(like);
+                .build());
 
         // 3) posts.likes +1
         postMapper.increaseLikes(postId);
@@ -325,21 +333,25 @@ public class PostService {
      * - DELETE /api/posts/{postId}/like
      */
     @Transactional
-    public void unlikePost(Long loginUserId, Long postId) {
-        // TODO: loginUserId -> email 변환 (User/Auth 도메인 연동)
-        String authorEmail = "todo@example.com";
+    public void unlikePost(String loginUserEmail, Long postId) {
+        requireEmail(loginUserEmail);
 
-        // 1) 좋아요가 존재하는지 확인
-        boolean alreadyLiked = postLikeMapper.existsByPostIdAndAuthorEmail(postId, authorEmail);
-        if (!alreadyLiked) {
-            // TODO: 이미 좋아요가 아닌 상태면 커스텀 예외
-            return;
+        // 1) 해당 게시글이 존재하는지 확인
+        Post post = postMapper.findById(postId);
+        if (post == null) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND, "좋아요를 취소할 게시글을 찾을 수 없습니다.");
         }
 
-        // 2) post_likes 에서 삭제
-        postLikeMapper.deleteByPostIdAndAuthorEmail(postId, authorEmail);
+        // 2) 좋아요가 존재하는지 확인
+        boolean alreadyLiked = postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
+        if (!alreadyLiked) {
+            throw new BusinessException(ErrorCode.LIKE_NOT_FOUND);
+        }
 
-        // 3) posts.likes -1
+        // 3) post_likes 에서 삭제
+        postLikeMapper.deleteByPostIdAndAuthorEmail(postId, loginUserEmail);
+
+        // 4) posts.likes -1
         postMapper.decreaseLikes(postId);
     }
 }
