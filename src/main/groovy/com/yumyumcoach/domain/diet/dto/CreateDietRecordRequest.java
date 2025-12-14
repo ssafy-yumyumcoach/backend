@@ -9,6 +9,8 @@ import java.util.List;
 
 public class CreateDietRecordRequest {
 
+    private Long id; // insert 시 생성된 PK를 MyBatis가 채우기 위함
+
     @NotBlank
     private String userId; // accounts.email 참조
 
@@ -35,6 +37,20 @@ public class CreateDietRecordRequest {
         this.recordDate = recordDate;
         this.mealType = mealType;
         this.items = items;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    // MyBatis generated keys 채우기용
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    // 인증 사용자 매핑용
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getUserId() {

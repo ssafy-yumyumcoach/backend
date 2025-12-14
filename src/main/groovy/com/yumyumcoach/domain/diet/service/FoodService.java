@@ -41,7 +41,7 @@ public class FoodService {
     }
 
     @Transactional(readOnly = true)
-    public FoodDto getFood(Long id) {
+    public FoodDto getFoodDetail(Long id) {
         FoodDto food = foodMapper.selectFoodById(id);
         if (food == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Food not found");

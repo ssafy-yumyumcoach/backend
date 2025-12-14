@@ -51,9 +51,9 @@ public class FoodController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<FoodDto> getFood(@PathVariable Long id) {
-        return ResponseEntity.ok(foodService.getFood(id));
+    @GetMapping("/{foodId}")
+    public ResponseEntity<FoodDto> getFoodDetail(@PathVariable Long id) {
+        return ResponseEntity.ok(foodService.getFoodDetail(id));
     }
 
     @GetMapping
