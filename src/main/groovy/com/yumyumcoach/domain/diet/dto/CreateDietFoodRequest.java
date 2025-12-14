@@ -13,8 +13,6 @@ public class CreateDietFoodRequest {
     @Positive
     private Double serveCount; // 1회 제공량/먹은 양 (serve_count)
 
-    private String unit; // g, ml 등 선택 입력
-
     @PositiveOrZero
     private Double calories;
 
@@ -38,7 +36,6 @@ public class CreateDietFoodRequest {
             Long foodId,
             String foodName,
             Double serveCount,
-            String unit,
             Double calories,
             Double carbs,
             Double protein,
@@ -48,7 +45,6 @@ public class CreateDietFoodRequest {
         this.foodId = foodId;
         this.foodName = foodName;
         this.serveCount = serveCount;
-        this.unit = unit;
         this.calories = calories;
         this.carbs = carbs;
         this.protein = protein;
@@ -66,10 +62,6 @@ public class CreateDietFoodRequest {
 
     public Double getServeCount() {
         return serveCount;
-    }
-
-    public String getUnit() {
-        return unit;
     }
 
     public Double getCalories() {

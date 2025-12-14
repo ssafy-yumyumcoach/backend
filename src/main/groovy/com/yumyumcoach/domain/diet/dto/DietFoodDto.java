@@ -7,7 +7,6 @@ public class DietFoodDto {
     private Long foodId;
     private String foodName;
     private Double serveCount;
-    private String unit;
     private Double calories;
     private Double carbs;
     private Double protein;
@@ -23,7 +22,6 @@ public class DietFoodDto {
             Long foodId,
             String foodName,
             Double serveCount,
-            String unit,
             Double calories,
             Double carbs,
             Double protein,
@@ -35,7 +33,6 @@ public class DietFoodDto {
         this.foodId = foodId;
         this.foodName = foodName;
         this.serveCount = serveCount;
-        this.unit = unit;
         this.calories = calories;
         this.carbs = carbs;
         this.protein = protein;
@@ -61,10 +58,6 @@ public class DietFoodDto {
 
     public Double getServeCount() {
         return serveCount;
-    }
-
-    public String getUnit() {
-        return unit;
     }
 
     public Double getCalories() {

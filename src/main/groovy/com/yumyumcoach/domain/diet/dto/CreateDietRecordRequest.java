@@ -18,9 +18,6 @@ public class CreateDietRecordRequest {
     @NotBlank
     private String mealType; // 예: breakfast/lunch/dinner/snack
 
-    private String title;
-    private String memo;
-
     @NotEmpty
     @Valid
     private List<CreateDietFoodRequest> items;
@@ -32,15 +29,11 @@ public class CreateDietRecordRequest {
             String userId,
             LocalDateTime recordDate,
             String mealType,
-            String title,
-            String memo,
             List<CreateDietFoodRequest> items
     ) {
         this.userId = userId;
         this.recordDate = recordDate;
         this.mealType = mealType;
-        this.title = title;
-        this.memo = memo;
         this.items = items;
     }
 
@@ -54,14 +47,6 @@ public class CreateDietRecordRequest {
 
     public String getMealType() {
         return mealType;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getMemo() {
-        return memo;
     }
 
     public List<CreateDietFoodRequest> getItems() {
