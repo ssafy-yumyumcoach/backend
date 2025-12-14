@@ -8,6 +8,8 @@ import com.yumyumcoach.domain.community.entity.Post;
 import com.yumyumcoach.domain.community.entity.PostComment;
 import com.yumyumcoach.domain.community.mapper.PostCommentMapper;
 import com.yumyumcoach.domain.community.mapper.PostMapper;
+import com.yumyumcoach.global.error.BusinessException;
+import com.yumyumcoach.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,16 +29,23 @@ public class CommentService {
     private final PostMapper postMapper;
     private final PostCommentMapper postCommentMapper;
 
+    private void requireEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new BusinessException(ErrorCode.AUTH_UNAUTHORIZED);
+        }
+    }
+
     /**
      * 특정 게시글의 댓글 목록 조회
      * - GET /api/posts/{postId}/comments
      */
-    public GetCommentsResponse getComments(Long postId) {
+    public GetCommentsResponse getComments(Long postId, String loginUserEmail) {
+        requireEmail(loginUserEmail);
+
         // 1) 게시글 존재 여부 확인
         Post post = postMapper.findById(postId);
         if (post == null) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalArgumentException("해당 게시글을 찾을 수 없습니다. postId=" + postId);
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND, "댓글을 조회할 게시글을 찾을 수 없습니다.");
         }
 
         // 2) 댓글 목록 조회
@@ -69,29 +78,25 @@ public class CommentService {
      * - POST /api/posts/{postId}/comments
      */
     @Transactional
-    public CommentResponse createComment(Long loginUserId, Long postId, CommentRequest request) {
+    public CommentResponse createComment(String loginUserEmail, Long postId, CommentRequest request) {
+        requireEmail(loginUserEmail);
+
         // 1) 게시글 존재 여부 확인
         Post post = postMapper.findById(postId);
         if (post == null) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalArgumentException("해당 게시글을 찾을 수 없습니다. postId=" + postId);
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND, "댓글을 작성할 게시글을 찾을 수 없습니다.");
         }
 
-        // 2) 로그인 유저 정보 (User/Auth 연동 전이라 더미 값)
-        // TODO: loginUserId -> email, authorId 변환 (User/Auth 도메인 연동)
-        String authorEmail = "todo@example.com";
-
+        // 2) PostComment 엔티티 생성
         LocalDateTime now = LocalDateTime.now();
-
-        // 3) PostComment 엔티티 생성
         PostComment comment = PostComment.builder()
                 .postId(postId)
-                .authorEmail(authorEmail)
+                .authorEmail(loginUserEmail)
                 .content(request.getContent())
                 .createdAt(now)
                 .build();
 
-        // 4) DB 저장 (id 자동 증가)
+        // 3) DB 저장 (id 자동 증가)
         postCommentMapper.insert(comment); // useGeneratedKeys=true 로 인해 comment.id 세팅됨
 
         return CommentResponse.builder()
@@ -110,31 +115,26 @@ public class CommentService {
      * - PUT /api/posts/{postId}/comments/{commentId}
      */
     @Transactional
-    public CommentResponse updateComment(Long loginUserId, Long postId, Long commentId, CommentRequest request) {
-        // 1) 댓글 조회
-        PostComment existing = postCommentMapper.findById(commentId);
+    public CommentResponse updateComment(String loginUserEmail, Long postId, Long commentId, CommentRequest request) {
+        requireEmail(loginUserEmail);
+
+        // 1) 댓글 조회 (postId와 commentId가 일치하는 댓글을 한 번에 조회)
+        PostComment existing = postCommentMapper.findByIdAndPostId(commentId, postId);
         if (existing == null) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalArgumentException("해당 댓글을 찾을 수 없습니다. commentId=" + commentId);
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND, "수정할 댓글을 찾을 수 없습니다.");
         }
 
-        // 2) postId 일치 여부 확인 (URL, DB 불일치 방지)
-        if (!existing.getPostId().equals(postId)) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalArgumentException("댓글이 해당 게시글에 속하지 않습니다. postId=" + postId);
+        // 2) 403: 작성자만 수정 가능
+        if (existing.getAuthorEmail() == null ||
+                !existing.getAuthorEmail().equalsIgnoreCase(loginUserEmail)) {
+            throw new BusinessException(ErrorCode.COMMENT_FORBIDDEN);
         }
 
-        // 3) 권한 체크 (작성자 == 로그인 유저인지)
-        // TODO: loginUserId -> email 변환 후 existing.getAuthorEmail() 과 비교
-
-        // 4) 내용 수정
-        LocalDateTime now = LocalDateTime.now();
-        PostComment toUpdate = PostComment.builder()
+        // 3) 내용 수정
+        postCommentMapper.update(PostComment.builder()
                 .id(commentId)
                 .content(request.getContent())
-                .build();
-
-        postCommentMapper.update(toUpdate);
+                .build());
 
         return CommentResponse.builder()
                 .commentId(commentId)
@@ -152,24 +152,22 @@ public class CommentService {
      * - DELETE /api/posts/{postId}/comments/{commentId}
      */
     @Transactional
-    public void deleteComment(Long loginUserId, Long postId, Long commentId) {
+    public void deleteComment(String loginUserEmail, Long postId, Long commentId) {
+        requireEmail(loginUserEmail);
+
         // 1) 댓글 조회
         PostComment existing = postCommentMapper.findById(commentId);
         if (existing == null) {
-            // TODO: 커스텀 예외로 교체
-            return;
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND, "삭제할 댓글을 찾을 수 없습니다.");
         }
 
-        // 2) postId 일치 여부 확인
-        if (!existing.getPostId().equals(postId)) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalArgumentException("댓글이 해당 게시글에 속하지 않습니다. postId=" + postId);
+        // 2) 403: 작성자만 삭제 가능
+        if (existing.getAuthorEmail() == null ||
+                !existing.getAuthorEmail().equalsIgnoreCase(loginUserEmail)) {
+            throw new BusinessException(ErrorCode.COMMENT_FORBIDDEN);
         }
 
-        // 3) 권한 체크 (작성자 == 로그인 유저인지)
-        // TODO: loginUserId -> email 변환 후 existing.getAuthorEmail() 비교
-
-        // 4) 삭제
-        postCommentMapper.deleteByPostId(postId);
+        // 3) 해당 댓글 1개만 삭제
+        postCommentMapper.delete(commentId);
     }
 }
