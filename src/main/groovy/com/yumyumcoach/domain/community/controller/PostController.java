@@ -5,6 +5,7 @@ import com.yumyumcoach.domain.community.dto.GetPostsResponse;
 import com.yumyumcoach.domain.community.dto.PostRequest;
 import com.yumyumcoach.domain.community.dto.PostResponse;
 import com.yumyumcoach.domain.community.service.PostService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -41,13 +42,13 @@ public class PostController {
     // 게시글 작성
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PostResponse post(@RequestBody PostRequest request) {
+    public PostResponse post(@Valid @RequestBody PostRequest request) {
         return postService.createPost(mockLoginEmail(), request);
     }
 
     // 게시글 수정
     @PutMapping("/{postId}")
-    public PostResponse updatePost(@PathVariable("postId") Long postId, @RequestBody PostRequest request) {
+    public PostResponse updatePost(@PathVariable("postId") Long postId, @Valid @RequestBody PostRequest request) {
         return postService.updatePost(mockLoginEmail(), postId, request);
     }
 

@@ -4,6 +4,7 @@ import com.yumyumcoach.domain.community.dto.CommentRequest;
 import com.yumyumcoach.domain.community.dto.CommentResponse;
 import com.yumyumcoach.domain.community.dto.GetCommentsResponse;
 import com.yumyumcoach.domain.community.service.CommentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +36,7 @@ public class CommentController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CommentResponse createComment(@PathVariable("postId") Long postId,
-                                         @RequestBody CommentRequest request) {
+                                         @Valid @RequestBody CommentRequest request) {
         return commentService.createComment(mockLoginEmail(), postId, request);
     }
 
@@ -43,7 +44,7 @@ public class CommentController {
     @PutMapping("/{commentId}")
     public CommentResponse updateComment(@PathVariable("postId") Long postId,
                                          @PathVariable("commentId") Long commentId,
-                                         @RequestBody CommentRequest request) {
+                                         @Valid @RequestBody CommentRequest request) {
         return commentService.updateComment(mockLoginEmail(), postId, commentId, request);
     }
 
