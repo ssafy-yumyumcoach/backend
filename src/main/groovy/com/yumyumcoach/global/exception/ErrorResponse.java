@@ -1,4 +1,4 @@
-package com.yumyumcoach.global.error;
+package com.yumyumcoach.global.exception;
 
 public record ErrorResponse(int status, String code, String message) {
     public static ErrorResponse from(ErrorCode errorCode) {

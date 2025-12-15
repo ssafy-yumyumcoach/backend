@@ -2,50 +2,64 @@ package com.yumyumcoach.global.exception;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.SignatureException;
 import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-/*
-전역 예외
- */
-
 @RestControllerAdvice
-public class GlobalExceptionHandler extends RuntimeException {
+public class GlobalExceptionHandler {
 
-    // JWT: 401 에러
+    // 의도된 비즈니스 예외
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusiness(BusinessException e) {
+        ErrorCode ec = e.getErrorCode();
+        return ResponseEntity.status(ec.getHttpStatus()).body(ErrorResponse.of(ec, e.getMessage()));
+    }
+
+    // JWT 만료
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<ErrorResponse> handleExpiredJwt(ExpiredJwtException e) {
+        return ResponseEntity.status(ErrorCode.AUTH_UNAUTHORIZED.getHttpStatus())
+                .body(ErrorResponse.of(ErrorCode.AUTH_UNAUTHORIZED, "액세스 토큰이 만료되었습니다."));
+    }
+
+    // JWT 위조/형식오류/지원안함 등
     @ExceptionHandler({
-            ExpiredJwtException.class,
             SignatureException.class,
             MalformedJwtException.class,
-            UnsupportedJwtException.class,
-
+            UnsupportedJwtException.class
     })
-    public ResponseEntity<?> handleJwtUnauthorized(Exception e) {
-        return createErrorResponse("INVALID_TOKEN", e.getMessage(), 401);
+    public ResponseEntity<ErrorResponse> handleInvalidJwt(Exception e) {
+        return ResponseEntity.status(ErrorCode.AUTH_UNAUTHORIZED.getHttpStatus())
+                .body(ErrorResponse.from(ErrorCode.AUTH_UNAUTHORIZED));
     }
 
-    // JWT: 400 에러
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException e) {
-        return createErrorResponse("INVALID_TOKEN", e.getMessage(), 400);
+    // @Valid 실패 -> 400
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValid(MethodArgumentNotValidException e) {
+        return ResponseEntity.badRequest().body(ErrorResponse.from(ErrorCode.INVALID_REQUEST));
     }
 
-    // JWT: 잘못된 이메일/비밀번호 입력 에러
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<?> InvalidCredentialsException(InvalidCredentialsException e) {
-        return createErrorResponse("AUTH_INVALID_CREDENTIALS", e.getMessage(), 401);
+    // JSON 바디가 깨짐/파싱 실패 -> 400
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleNotReadable(Exception e) {
+        return ResponseEntity.badRequest().body(ErrorResponse.from(ErrorCode.INVALID_REQUEST));
     }
 
-    // 공통 에러 응답
-    private ResponseEntity<?> createErrorResponse(String code, String message, int status) {
-        return ResponseEntity
-                .status(status)
-                .body(Map.of("status", status, "code", code, "message", message));
+    // path/query 타입 미스매치 -> 400
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(Exception e) {
+        return ResponseEntity.badRequest().body(ErrorResponse.from(ErrorCode.INVALID_REQUEST));
+    }
+
+    // 나머지 -> 500
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnknown(Exception e) {
+        return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
+                .body(ErrorResponse.from(ErrorCode.INTERNAL_SERVER_ERROR));
     }
 }
+

@@ -1,4 +1,4 @@
-package com.yumyumcoach.global.error;
+package com.yumyumcoach.global.exception;
 
 import lombok.Getter;
 

@@ -3,6 +3,7 @@ package com.yumyumcoach.domain.auth.controller;
 import com.yumyumcoach.domain.auth.dto.LoginRequest;
 import com.yumyumcoach.domain.auth.dto.LoginResponse;
 import com.yumyumcoach.domain.auth.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +19,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
 
         LoginResponse response = authService.login(request);
 
