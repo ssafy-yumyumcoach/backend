@@ -6,6 +6,7 @@ import com.yumyumcoach.domain.challenge.dto.JoinChallengeRequest;
 import com.yumyumcoach.domain.challenge.dto.JoinChallengeResponse;
 import com.yumyumcoach.domain.challenge.dto.LeaveChallengeResponse;
 import com.yumyumcoach.domain.challenge.service.ChallengeService;
+import com.yumyumcoach.global.common.CurrentUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -27,8 +28,8 @@ public class ChallengeController {
      */
     @GetMapping
     public ChallengeListResponse getChallenges(@RequestParam("month") String month) {
-        String loginUserEmail = "todo@example.com"; // TODO: 인증 연동 후 교체
-        return challengeService.getChallenges(month, loginUserEmail);
+        String email = CurrentUser.email();
+        return challengeService.getChallenges(month, email);
     }
 
     /**
@@ -37,8 +38,8 @@ public class ChallengeController {
      */
     @GetMapping("/{challengeId}")
     public ChallengeResponse getChallengeDetail(@PathVariable("challengeId") Long challengeId) {
-        String loginUserEmail = "todo@example.com"; // TODO: 인증 연동 후 교체
-        return challengeService.getChallengeDetail(challengeId, loginUserEmail);
+        String email = CurrentUser.email();
+        return challengeService.getChallengeDetail(challengeId, email);
     }
 
     /**
@@ -51,8 +52,8 @@ public class ChallengeController {
             @PathVariable("challengeId") Long challengeId,
             @RequestBody JoinChallengeRequest request
     ) {
-        String loginUserEmail = "todo@example.com"; // TODO: 인증 연동 후 교체
-        return challengeService.joinChallenge(challengeId, loginUserEmail, request);
+        String email = CurrentUser.email();
+        return challengeService.joinChallenge(challengeId, email, request);
     }
 
     /**
@@ -63,8 +64,8 @@ public class ChallengeController {
      */
     @DeleteMapping("/{challengeId}/leave")
     public LeaveChallengeResponse leaveChallenge(@PathVariable("challengeId") Long challengeId) {
-        String loginUserEmail = "todo@example.com"; // TODO: 인증 연동 후 교체
-        return challengeService.leaveChallenge(challengeId, loginUserEmail);
+        String email = CurrentUser.email();
+        return challengeService.leaveChallenge(challengeId, email);
     }
 }
 
