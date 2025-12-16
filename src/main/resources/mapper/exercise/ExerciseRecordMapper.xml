@@ -70,4 +70,10 @@
         WHERE id = #{recordId}
           AND email = #{email}
     </delete>
+
+    <select id="findEmailByRecordId" resultType="string">
+        SELECT email
+        FROM exercise_records
+        WHERE id = #{recordId}
+    </select>
 </mapper>

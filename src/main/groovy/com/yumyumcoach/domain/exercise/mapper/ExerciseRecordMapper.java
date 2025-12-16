@@ -21,4 +21,7 @@ public interface ExerciseRecordMapper {
     void update(ExerciseRecord exerciseRecord);
 
     void delete(@Param("recordId") Long recordId, @Param("email") String email);
+
+    // 추가: recordId로 소유자(email) 조회
+    String findEmailByRecordId(@Param("recordId") Long recordId);
 }

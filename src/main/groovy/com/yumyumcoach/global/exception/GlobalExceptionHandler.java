@@ -4,6 +4,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -43,6 +44,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(ErrorResponse.from(ErrorCode.INVALID_REQUEST));
     }
 
+    // 메서드 파라미터 검증 실패(@Validated, @Positive 등) -> 400
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException e) {
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.from(ErrorCode.INVALID_REQUEST));
+    }
+
     // JSON 바디가 깨짐/파싱 실패 -> 400
     @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleNotReadable(Exception e) {
@@ -58,6 +66,7 @@ public class GlobalExceptionHandler {
     // 나머지 -> 500
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnknown(Exception e) {
+        e.printStackTrace();
         return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
                 .body(ErrorResponse.from(ErrorCode.INTERNAL_SERVER_ERROR));
     }

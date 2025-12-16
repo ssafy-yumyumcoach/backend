@@ -32,7 +32,12 @@ public enum ErrorCode {
     CHALLENGE_JOIN_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "현재는 해당 챌린지에 참여할 수 없습니다."),
     CHALLENGE_JOIN_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 챌린지에 대한 참여 이력을 찾을 수 없습니다."),
     CHALLENGE_LEAVE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "현재는 해당 챌린지에서 나갈 수 없습니다."),
-    CHALLENGE_ALREADY_LEFT(HttpStatus.CONFLICT, "이미 나간 챌린지입니다.");
+    CHALLENGE_ALREADY_LEFT(HttpStatus.CONFLICT, "이미 나간 챌린지입니다."),
+
+    // ===== EXERCISE =====
+    EXERCISE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 운동을 찾을 수 없습니다."),
+    EXERCISE_RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 운동 기록을 찾을 수 없습니다."),
+    EXERCISE_RECORD_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 운동 기록에 대한 권한이 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;
