@@ -29,19 +29,11 @@ public class CommentService {
     private final PostMapper postMapper;
     private final PostCommentMapper postCommentMapper;
 
-    private void requireEmail(String email) {
-        if (email == null || email.isBlank()) {
-            throw new BusinessException(ErrorCode.AUTH_UNAUTHORIZED);
-        }
-    }
-
     /**
      * 특정 게시글의 댓글 목록 조회
      * - GET /api/posts/{postId}/comments
      */
-    public GetCommentsResponse getComments(Long postId, String loginUserEmail) {
-        requireEmail(loginUserEmail);
-
+    public GetCommentsResponse getComments(Long postId) {
         // 1) 게시글 존재 여부 확인
         Post post = postMapper.findById(postId);
         if (post == null) {
@@ -79,8 +71,6 @@ public class CommentService {
      */
     @Transactional
     public CommentResponse createComment(String loginUserEmail, Long postId, CommentRequest request) {
-        requireEmail(loginUserEmail);
-
         // 1) 게시글 존재 여부 확인
         Post post = postMapper.findById(postId);
         if (post == null) {
@@ -116,8 +106,6 @@ public class CommentService {
      */
     @Transactional
     public CommentResponse updateComment(String loginUserEmail, Long postId, Long commentId, CommentRequest request) {
-        requireEmail(loginUserEmail);
-
         // 1) 댓글 조회 (postId와 commentId가 일치하는 댓글을 한 번에 조회)
         PostComment existing = postCommentMapper.findByIdAndPostId(commentId, postId);
         if (existing == null) {
@@ -153,10 +141,8 @@ public class CommentService {
      */
     @Transactional
     public void deleteComment(String loginUserEmail, Long postId, Long commentId) {
-        requireEmail(loginUserEmail);
-
         // 1) 댓글 조회
-        PostComment existing = postCommentMapper.findById(commentId);
+        PostComment existing = postCommentMapper.findByIdAndPostId(commentId, postId);
         if (existing == null) {
             throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND, "삭제할 댓글을 찾을 수 없습니다.");
         }
