@@ -1,0 +1,24 @@
+package com.yumyumcoach.domain.exercise.mapper;
+
+import com.yumyumcoach.domain.exercise.entity.ExerciseRecord;
+import com.yumyumcoach.domain.exercise.entity.ExerciseRecordWithExercise;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@Mapper
+public interface ExerciseRecordMapper {
+    ExerciseRecordWithExercise findDetailByIdAndEmail(@Param("recordId") Long recordId,
+                                                      @Param("email") String email);
+
+    List<ExerciseRecordWithExercise> findByEmailAndDate(@Param("email") String email,
+                                                        @Param("recordDate") LocalDate recordDate);
+
+    void insert(ExerciseRecord exerciseRecord);
+
+    void update(ExerciseRecord exerciseRecord);
+
+    void delete(@Param("recordId") Long recordId, @Param("email") String email);
+}
