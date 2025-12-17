@@ -35,7 +35,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             // 인증이 필요 없는 경로면 그냥 통과(로그인, 회원가입 등)
             String uri = request.getRequestURI();
-            if(uri.startsWith("/api/auth/sign-in") || uri.startsWith("/api/auth/sign-up")) {
+            if(uri.startsWith("/api/auth/sign-in") || uri.startsWith("/api/auth/sign-up") ||
+                uri.startsWith("/api/auth/check-email")) {
                 filterChain.doFilter(request,response);
                 return;
             }

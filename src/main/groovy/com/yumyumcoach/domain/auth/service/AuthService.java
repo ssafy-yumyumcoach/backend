@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.regex.Pattern;
 
 /*
 사용자에게 입력받은 이메일과 비밀번호를 검증하고,
@@ -34,6 +35,14 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenMapper refreshTokenMapper;
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+
+    @Transactional(readOnly = true)
+    public boolean isEmailAvailable(String email) {
+        validateEmail(email);
+        return !accountMapper.existsByEmail(email);
+    }
 
     @Transactional(readOnly = false)
     public LoginResponse login(LoginRequest request) {
@@ -64,13 +73,6 @@ public class AuthService {
                 .build();
     }
 
-    private void saveRefreshToken(String email, String refreshToken) {
-        String tokenHash = TokenHashUtil.sha256Hex(refreshToken);
-        LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(jwtTokenProvider.getRefreshTokenExpirationSeconds());
-        refreshTokenMapper.upsert(email, tokenHash, expiresAt);
-    }
-
     @Transactional
     public void logout(String authenticatedEmail, String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
@@ -89,6 +91,19 @@ public class AuthService {
         int deleted = refreshTokenMapper.deleteByEmailAndHash(emailFromToken, tokenHash);
         if (deleted == 0) {
             throw new BusinessException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
+        }
+    }
+
+    private void saveRefreshToken(String email, String refreshToken) {
+        String tokenHash = TokenHashUtil.sha256Hex(refreshToken);
+        LocalDateTime expiresAt = LocalDateTime.now()
+                .plusSeconds(jwtTokenProvider.getRefreshTokenExpirationSeconds());
+        refreshTokenMapper.upsert(email, tokenHash, expiresAt);
+    }
+
+    private static void validateEmail(String email) {
+        if (email == null || email.isBlank() || !EMAIL_PATTERN.matcher(email).matches()) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID_EMAIL_FORMAT);
         }
     }
 }

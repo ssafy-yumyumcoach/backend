@@ -13,4 +13,6 @@ login 로직에서 필요한 email 로 회원찾기
 @Mapper
 public interface AccountMapper {
     Account findByEmail(String email);
+
+    boolean existsByEmail(String email);
 }

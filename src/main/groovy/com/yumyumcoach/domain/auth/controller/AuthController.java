@@ -1,9 +1,6 @@
 package com.yumyumcoach.domain.auth.controller;
 
-import com.yumyumcoach.domain.auth.dto.LoginRequest;
-import com.yumyumcoach.domain.auth.dto.LoginResponse;
-import com.yumyumcoach.domain.auth.dto.LogoutRequest;
-import com.yumyumcoach.domain.auth.dto.LogoutResponse;
+import com.yumyumcoach.domain.auth.dto.*;
 import com.yumyumcoach.domain.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,5 +28,11 @@ public class AuthController {
                                                  @RequestBody LogoutRequest request) {
         authService.logout(email, request.getRefreshToken());
         return ResponseEntity.ok(new LogoutResponse("로그아웃 되었습니다."));
+    }
+
+    @GetMapping("/check-email")
+    public ResponseEntity<EmailCheckResponse> checkEmail(@RequestParam("email") String email) {
+        boolean available = authService.isEmailAvailable(email);
+        return ResponseEntity.ok(new EmailCheckResponse(email, available));
     }
 }
