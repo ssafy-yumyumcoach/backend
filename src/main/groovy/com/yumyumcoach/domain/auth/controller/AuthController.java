@@ -5,6 +5,7 @@ import com.yumyumcoach.domain.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,5 +41,11 @@ public class AuthController {
     public ResponseEntity<UsernameCheckResponse> checkUsername(@RequestParam("username") String username) {
         boolean available = authService.isUsernameAvailable(username);
         return ResponseEntity.ok(new UsernameCheckResponse(username, available));
+    }
+
+    @PostMapping("/sign-up")
+    public ResponseEntity<SignUpResponse> signup(@Valid @RequestBody SignUpRequest request) {
+        SignUpResponse response = authService.signUp(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

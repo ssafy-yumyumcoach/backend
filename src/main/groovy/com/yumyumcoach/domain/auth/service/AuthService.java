@@ -3,8 +3,9 @@ package com.yumyumcoach.domain.auth.service;
 import com.yumyumcoach.domain.auth.dto.LoginRequest;
 import com.yumyumcoach.domain.auth.dto.LoginResponse;
 import com.yumyumcoach.domain.auth.dto.UserInfo;
+import com.yumyumcoach.domain.auth.dto.SignUpRequest;
+import com.yumyumcoach.domain.auth.dto.SignUpResponse;
 import com.yumyumcoach.domain.auth.entity.Account;
-import com.yumyumcoach.domain.auth.entity.RefreshToken;
 import com.yumyumcoach.domain.auth.mapper.AccountMapper;
 import com.yumyumcoach.domain.auth.mapper.RefreshTokenMapper;
 import com.yumyumcoach.global.exception.BusinessException;
@@ -40,19 +41,13 @@ public class AuthService {
     }
 
     //닉네임(username) 중복 확인
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean isUsernameAvailable(String username) {
         validateUsername(username);
         return !accountMapper.existsByUsername(username);
     }
 
-    /*
-    사용자에게 입력받은 이메일과 비밀번호를 검증하고,
-    성공 시 JWT 방식의 access token 과 refresh token 생성 후
-
-    성공 시: 로그인 정보 반환
-    실패 시: BusinessException 예외 던짐
-    */
+    // 로그인: DB 에 저장된 이메일인지와 확인, 비밀번호가 일치하는지 확인 후 access token 과 refresh token 생성 후 로그인
     @Transactional(readOnly = false)
     public LoginResponse login(LoginRequest request) {
         Account account = accountMapper.findByEmail(request.getEmail());
@@ -82,12 +77,7 @@ public class AuthService {
                 .build();
     }
 
-    /*
-    사용자의 refresh token 이 유효한지 검사 후
-    login 주체와 logout 시키려는 계정의 주인이 같은지 확인 후
-    맞다면 로그아웃
-     */
-
+    // 로그아웃: refresh token 유효성 검사 및 login 한 사용자와 logout 시키려는 계정의 사용자 일치 여부 확인 후 로그아웃
     @Transactional
     public void logout(String authenticatedEmail, String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
@@ -109,11 +99,29 @@ public class AuthService {
         }
     }
 
+
     private void saveRefreshToken(String email, String refreshToken) {
         String tokenHash = TokenHashUtil.sha256Hex(refreshToken);
         LocalDateTime expiresAt = LocalDateTime.now()
                 .plusSeconds(jwtTokenProvider.getRefreshTokenExpirationSeconds());
         refreshTokenMapper.upsert(email, tokenHash, expiresAt);
+    }
+
+    // 회원가입: 이메일/닉네임 형식 및 중복 확인 후 계정 저장
+    @Transactional
+    public SignUpResponse signUp(SignUpRequest request) {
+        validateEmail(request.getEmail());
+        validateUsername(request.getUsername());
+
+        if (accountMapper.existsByEmail(request.getEmail())) {
+            throw new BusinessException(ErrorCode.AUTH_EMAIL_ALREADY_EXISTS);
+        }
+        if (accountMapper.existsByUsername(request.getUsername())) {
+            throw new BusinessException(ErrorCode.AUTH_USERNAME_ALREADY_EXISTS);
+        }
+
+        createAccount(request);
+        return new SignUpResponse(request.getEmail(), request.getUsername());
     }
 
     private static void validateEmail(String email) {
@@ -126,5 +134,11 @@ public class AuthService {
         if (username == null || username.isBlank() || !USERNAME_PATTERN.matcher(username).matches()) {
             throw new BusinessException(ErrorCode.AUTH_INVALID_USERNAME_FORMAT);
         }
+    }
+
+    private void createAccount(SignUpRequest request) {
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        Account newAccount = new Account(request.getEmail(), request.getUsername(), encodedPassword);
+        accountMapper.insertNewAccount(newAccount);
     }
 }

@@ -22,4 +22,9 @@
         WHERE username = #{username}
     </select>
 
+    <insert id="insertNewAccount">
+        INSERT INTO accounts(email, username, password)
+        VALUES (#{email}, #{username}, #{password})
+    </insert>
+
 </mapper>
