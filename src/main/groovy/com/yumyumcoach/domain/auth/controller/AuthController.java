@@ -2,14 +2,14 @@ package com.yumyumcoach.domain.auth.controller;
 
 import com.yumyumcoach.domain.auth.dto.LoginRequest;
 import com.yumyumcoach.domain.auth.dto.LoginResponse;
+import com.yumyumcoach.domain.auth.dto.LogoutRequest;
+import com.yumyumcoach.domain.auth.dto.LogoutResponse;
 import com.yumyumcoach.domain.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -18,11 +18,18 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/login")
+    @PostMapping("/sign-in")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
 
         LoginResponse response = authService.login(request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/sign-out")
+    public ResponseEntity<LogoutResponse> logout(@AuthenticationPrincipal String email,
+                                                 @RequestBody LogoutRequest request) {
+        authService.logout(email, request.getRefreshToken());
+        return ResponseEntity.ok(new LogoutResponse("로그아웃 되었습니다."));
     }
 }

@@ -15,6 +15,8 @@ public enum ErrorCode {
     // ===== AUTH =====
     AUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "액세스 토큰이 유효하지 않습니다."),
     AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."),
+    AUTH_REFRESH_TOKEN_REQUIRED(HttpStatus.BAD_REQUEST, "refresh token 이 없습니다."),
+    AUTH_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 refresh token 입니다."),
 
     // ===== COMMUNITY =====
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 게시글을 찾을 수 없습니다."),

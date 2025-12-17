@@ -5,7 +5,6 @@ import com.yumyumcoach.global.exception.ErrorCode;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,63 +17,62 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
+import java.security.SignatureException;
 import java.util.Collections;
+
+/*
+모든 요청이 들어올 때마다 JWT 를 검사하고 사용자 인증을 해줌
+ */
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
-    /**
-     * 핵심: 필터에서 발생한 예외를 @RestControllerAdvice(GlobalExceptionHandler) 쪽으로 넘겨서
-     *      ErrorResponse 형태로 통일된 JSON 응답을 내려주기 위해 사용한다.
-     */
+
     private final HandlerExceptionResolver resolver;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            // 0) 인증이 필요 없는 경로면 그냥 통과 (로그인, 회원가입 등)
-            if (request.getRequestURI().startsWith("/api/auth")) {
-                filterChain.doFilter(request, response);
+            // 인증이 필요 없는 경로면 그냥 통과(로그인, 회원가입 등)
+            String uri = request.getRequestURI();
+            if(uri.startsWith("/api/auth/sign-in") || uri.startsWith("/api/auth/sign-up")) {
+                filterChain.doFilter(request,response);
                 return;
             }
 
-            // 1) Authorization 헤더에서 Bearer 토큰 추출
+            // Authorization 헤더에서 Bearer 토큰 추출
             String token = null;
             String header = request.getHeader("Authorization");
             if (header != null && header.startsWith("Bearer ")) {
                 token = header.substring(7);
             }
 
-            // 2) 토큰이 없으면... 인증 불가(401)
+            // 토큰이 없으면 인증 불가(로그인하지 않은 사용자)
             if (token == null) {
                 resolver.resolveException(request, response, null, new BusinessException(ErrorCode.AUTH_UNAUTHORIZED));
                 return;
             }
-
-            // 3) 토큰 검증
+            
+            // 토큰 검증
             jwtTokenProvider.validateToken(token);
 
-            // 4) 토큰에서 이메일(subject) 추출
+            // 토큰에서 이메일 추출
             String email = jwtTokenProvider.getEmail(token);
 
-            // 5) SecurityContext에 인증 정보 세팅
+            // SecurityContext 에 인증 정보 세팅
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(email, null, Collections.emptyList());
             authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
-            // 6) 다음 필터/컨트롤러로 진행
+            // 다음 필터/컨트롤러로 진행
             filterChain.doFilter(request, response);
         } catch (ExpiredJwtException e) {
-            // 만료 토큰
             resolver.resolveException(request, response, null,
                     new BusinessException(ErrorCode.AUTH_UNAUTHORIZED, "액세스 토큰이 만료되었습니다."));
-        } catch (SignatureException | MalformedJwtException | UnsupportedJwtException | IllegalArgumentException e) {
-            // 유효하지 않은 토큰
+        } catch (Exception e) {
             resolver.resolveException(request, response, null,
-                    new BusinessException(ErrorCode.AUTH_UNAUTHORIZED));
-        } finally {
-            SecurityContextHolder.clearContext();
+                    new BusinessException(ErrorCode.AUTH_UNAUTHORIZED, "유효하지 않은 토큰입니다."));
         }
     }
 }
