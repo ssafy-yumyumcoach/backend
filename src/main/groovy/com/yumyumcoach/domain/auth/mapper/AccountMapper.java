@@ -4,15 +4,17 @@ import com.yumyumcoach.domain.auth.entity.Account;
 import org.apache.ibatis.annotations.Mapper;
 
 /*
-login 로직에서 필요한 email 로 회원찾기
-
-성공 시: 해당 Account 반환
-실패 시: null 반환
+"/api/auth/..." 요청의 Mapper
  */
 
 @Mapper
 public interface AccountMapper {
+    // 로그인 시 필요한 이메일로 계정 찾기
     Account findByEmail(String email);
 
+    // 이메일 중복 확인
     boolean existsByEmail(String email);
+
+    // 닉네임(username) 중복 확인
+    boolean existsByUsername(String username);
 }

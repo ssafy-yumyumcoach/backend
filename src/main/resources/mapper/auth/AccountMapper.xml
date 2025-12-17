@@ -16,4 +16,10 @@
         WHERE email = #{email}
     </select>
 
+    <select id="existsByUsername" resultType="boolean">
+        SELECT COUNT(1) > 0
+        FROM accounts
+        WHERE username = #{username}
+    </select>
+
 </mapper>

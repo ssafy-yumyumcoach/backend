@@ -35,4 +35,10 @@ public class AuthController {
         boolean available = authService.isEmailAvailable(email);
         return ResponseEntity.ok(new EmailCheckResponse(email, available));
     }
+
+    @GetMapping("/check-username")
+    public ResponseEntity<UsernameCheckResponse> checkUsername(@RequestParam("username") String username) {
+        boolean available = authService.isUsernameAvailable(username);
+        return ResponseEntity.ok(new UsernameCheckResponse(username, available));
+    }
 }

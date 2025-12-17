@@ -19,14 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
-/*
-사용자에게 입력받은 이메일과 비밀번호를 검증하고,
-성공 시 JWT 방식의 access token 과 refresh token 생성 후
-
-성공 시: 로그인 정보 반환
-실패 시: BusinessException 예외 던짐
- */
-
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -37,13 +29,30 @@ public class AuthService {
     private final RefreshTokenMapper refreshTokenMapper;
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    private static final Pattern USERNAME_PATTERN =
+            Pattern.compile("^[가-힣a-zA-Z0-9._]{2,12}$");
 
+    //이메일 중복확인
     @Transactional(readOnly = true)
     public boolean isEmailAvailable(String email) {
         validateEmail(email);
         return !accountMapper.existsByEmail(email);
     }
 
+    //닉네임(username) 중복 확인
+    @Transactional
+    public boolean isUsernameAvailable(String username) {
+        validateUsername(username);
+        return !accountMapper.existsByUsername(username);
+    }
+
+    /*
+    사용자에게 입력받은 이메일과 비밀번호를 검증하고,
+    성공 시 JWT 방식의 access token 과 refresh token 생성 후
+
+    성공 시: 로그인 정보 반환
+    실패 시: BusinessException 예외 던짐
+    */
     @Transactional(readOnly = false)
     public LoginResponse login(LoginRequest request) {
         Account account = accountMapper.findByEmail(request.getEmail());
@@ -72,6 +81,12 @@ public class AuthService {
                 .userInfo(new UserInfo(account.getEmail(), account.getUsername()))
                 .build();
     }
+
+    /*
+    사용자의 refresh token 이 유효한지 검사 후
+    login 주체와 logout 시키려는 계정의 주인이 같은지 확인 후
+    맞다면 로그아웃
+     */
 
     @Transactional
     public void logout(String authenticatedEmail, String refreshToken) {
@@ -104,6 +119,12 @@ public class AuthService {
     private static void validateEmail(String email) {
         if (email == null || email.isBlank() || !EMAIL_PATTERN.matcher(email).matches()) {
             throw new BusinessException(ErrorCode.AUTH_INVALID_EMAIL_FORMAT);
+        }
+    }
+
+    private static void validateUsername(String username) {
+        if (username == null || username.isBlank() || !USERNAME_PATTERN.matcher(username).matches()) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID_USERNAME_FORMAT);
         }
     }
 }
