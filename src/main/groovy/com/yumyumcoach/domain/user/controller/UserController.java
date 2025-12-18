@@ -49,7 +49,7 @@ public class UserController {
      * 내 대표뱃지 설정
      */
     @PutMapping("/titles/{titleId}")
-    public MyTitleResponse selectMyTitle(@PathVariable Long titleId) {
+    public MyTitleResponse selectMyTitle(@PathVariable("titleId") Long titleId) {
         String email = CurrentUser.email();
         return userService.selectMyTitle(email, titleId);
     }

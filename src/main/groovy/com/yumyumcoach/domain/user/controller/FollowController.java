@@ -29,14 +29,14 @@ public class FollowController {
     }
 
     @PostMapping("/{userId}/follow")
-    public ResponseEntity<FollowUserResponse> follow(@PathVariable Long userId) {
+    public ResponseEntity<FollowUserResponse> follow(@PathVariable("userId") Long userId) {
         String email = CurrentUser.email();
         FollowUserResponse res = followService.followUser(email, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
     @DeleteMapping("/{userId}/follow")
-    public UnfollowUserResponse unfollow(@PathVariable Long userId) {
+    public UnfollowUserResponse unfollow(@PathVariable("userId") Long userId) {
         String email = CurrentUser.email();
         return followService.unfollowUser(email, userId);
     }
