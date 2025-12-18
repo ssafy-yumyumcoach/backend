@@ -6,7 +6,8 @@ import com.yumyumcoach.domain.exercise.entity.ExerciseRecord;
 import com.yumyumcoach.domain.exercise.entity.ExerciseRecordWithExercise;
 import com.yumyumcoach.domain.exercise.mapper.ExerciseMapper;
 import com.yumyumcoach.domain.exercise.mapper.ExerciseRecordMapper;
-import com.yumyumcoach.domain.exercise.mapper.ProfileMapper;
+import com.yumyumcoach.domain.user.entity.Profile;
+import com.yumyumcoach.domain.user.mapper.ProfileMapper;
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -107,7 +108,8 @@ public class ExerciseService {
             throw new BusinessException(ErrorCode.EXERCISE_NOT_FOUND);
         }
 
-        Double currentWeight = profileMapper.findCurrentWeightByEmail(email);
+        Profile profile = profileMapper.findByEmail(email);
+        Double currentWeight = profile.getCurrentWeight();
         if (currentWeight == null) {
             // TODO: 500 에러 대신 다른 에러로 교체하기
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
