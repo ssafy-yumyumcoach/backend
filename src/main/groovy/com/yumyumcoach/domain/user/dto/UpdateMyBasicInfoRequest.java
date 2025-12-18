@@ -13,4 +13,8 @@ public class UpdateMyBasicInfoRequest {
     private String username;         // accounts.username (optional)
     private String profileImageUrl;  // profiles.profile_image_url (optional)
     private String introduction;     // profiles.introduction (optional)
+
+    public boolean hasAnyValue() {
+        return username != null || profileImageUrl != null || introduction != null;
+    }
 }

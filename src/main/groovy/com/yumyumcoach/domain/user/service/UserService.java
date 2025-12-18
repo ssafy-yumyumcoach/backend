@@ -4,6 +4,7 @@ import com.yumyumcoach.domain.auth.entity.Account;
 import com.yumyumcoach.domain.auth.mapper.AccountMapper;
 import com.yumyumcoach.domain.user.dto.MyTitleResponse;
 import com.yumyumcoach.domain.user.dto.MyPageResponse;
+import com.yumyumcoach.domain.user.dto.UpdateMyBasicInfoRequest;
 import com.yumyumcoach.domain.user.dto.UpdateMyHealthInfoRequest;
 import com.yumyumcoach.domain.user.entity.Profile;
 import com.yumyumcoach.domain.user.mapper.FollowMapper;
@@ -78,12 +79,52 @@ public class UserService {
     }
 
     @Transactional
-    public void updateMyHealthInfo(String email, UpdateMyHealthInfoRequest req) {
+    public MyPageResponse.Basic updateMyBasicInfo(String email, UpdateMyBasicInfoRequest req) {
+
         if (req == null || !req.hasAnyValue()) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST);
         }
 
-        Profile profile = Profile.builder()
+        Profile profile = profileMapper.findByEmail(email);
+        if (profile == null) {
+            throw new BusinessException(ErrorCode.PROFILE_NOT_FOUND);
+        }
+
+        // TODO: 닉네임 업데이트 로직 구현하기
+
+        Profile patch = Profile.builder()
+                .email(email)
+                .profileImageUrl(req.getProfileImageUrl())
+                .introduction(req.getIntroduction())
+                .build();
+
+        profileMapper.updateBasic(patch);
+
+        Profile updated = profileMapper.findByEmail(email);
+        Long userId = accountMapper.findIdByEmail(email);
+        Account account = accountMapper.findByEmail(email);
+
+        return MyPageResponse.Basic.builder()
+                .userId(userId)
+                .email(email)
+                .username(account.getUsername())
+                .profileImageUrl(updated.getProfileImageUrl())
+                .introduction(updated.getIntroduction())
+                .build();
+    }
+
+    @Transactional
+    public MyPageResponse.Health updateMyHealthInfo(String email, UpdateMyHealthInfoRequest req) {
+        if (req == null || !req.hasAnyValue()) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
+
+        Profile profile = profileMapper.findByEmail(email);
+        if (profile == null) {
+            throw new BusinessException(ErrorCode.PROFILE_NOT_FOUND);
+        }
+
+        Profile patch = Profile.builder()
                 .email(email)
                 .birthDate(req.getBirthDate())
                 .height(req.getHeight())
@@ -97,7 +138,22 @@ public class UserService {
                 .activityLevel(req.getActivityLevel())
                 .build();
 
-        profileMapper.updateHealth(profile);
+        profileMapper.updateHealth(patch);
+
+        Profile updated = profileMapper.findByEmail(email);
+
+        return MyPageResponse.Health.builder()
+                .birthDate(updated.getBirthDate())
+                .height(updated.getHeight())
+                .weight(updated.getCurrentWeight())
+                .goalWeight(updated.getTargetWeight())
+                .hasDiabetes(updated.getHasDiabetes())
+                .hasHypertension(updated.getHasHypertension())
+                .hasHyperlipidemia(updated.getHasHyperlipidemia())
+                .otherDisease(updated.getOtherDisease())
+                .goal(updated.getGoal())
+                .activityLevel(updated.getActivityLevel())
+                .build();
     }
 
     @Transactional
