@@ -67,4 +67,12 @@
         WHERE post_id = #{postId}
     </delete>
 
+    <!-- 특정 게시글에 해당 하는 댓글 단건 조회 -->
+    <select id="findByIdAndPostId" resultType="com.yumyumcoach.domain.community.entity.PostComment">
+        SELECT *
+        FROM post_comments
+        WHERE id = #{commentId}
+          AND post_id = #{postId}
+    </select>
+
 </mapper>
