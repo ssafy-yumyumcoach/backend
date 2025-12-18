@@ -16,6 +16,15 @@ public enum ErrorCode {
     AUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "액세스 토큰이 유효하지 않습니다."),
     AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."),
 
+    // ===== USER =====
+    PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "프로필 정보를 찾을 수 없습니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다."),
+    USER_TITLE_NOT_FOUND(HttpStatus.NOT_FOUND, "대표로 설정할 수 있는 타이틀을 찾을 수 없습니다."),
+    FOLLOW_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 팔로우 요청입니다."),
+    FOLLOW_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "팔로우할 사용자를 찾을 수 없습니다."),
+    FOLLOW_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 팔로우하고 있는 사용자입니다."),
+    FOLLOW_NOT_FOUND(HttpStatus.NOT_FOUND, "팔로우 관계를 찾을 수 없습니다."),
+
     // ===== COMMUNITY =====
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 게시글을 찾을 수 없습니다."),
     POST_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 게시글에 대한 권한이 없습니다."),
