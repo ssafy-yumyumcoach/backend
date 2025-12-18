@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public class DietRecords {
 
   private Long id;
-  private Accounts email;
+  private String email;
   private LocalDateTime recordDate;
   private String mealType;
 
