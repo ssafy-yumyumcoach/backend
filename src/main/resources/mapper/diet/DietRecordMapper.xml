@@ -28,7 +28,7 @@
     </resultMap>
 
     <!-- 식단 단건 상세 -->
-    <select id="selectDietRecordDetail" parameterType="long" resultMap="DietRecordDetailMap">
+    <select id="selectDietRecordDetail" resultMap="DietRecordDetailMap">
         SELECT
             dr.id,
             dr.email,
@@ -48,6 +48,7 @@
         LEFT JOIN diet_foods df ON dr.id = df.diet_id
         LEFT JOIN foods f ON df.food_id = f.id
         WHERE dr.id = #{id}
+          AND dr.email = #{userId}
         ORDER BY df.order_index
     </select>
 
@@ -60,6 +61,20 @@
             meal_type AS mealType
         FROM diet_records
         WHERE email = #{userId}
+        ORDER BY record_date DESC, id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 사용자별 특정 날짜 식단 목록 (페이징) -->
+    <select id="selectDietRecordsByUserAndDate" resultType="com.yumyumcoach.domain.diet.dto.DietRecordDto">
+        SELECT
+            id,
+            email AS userId,
+            record_date AS recordDate,
+            meal_type AS mealType
+        FROM diet_records
+        WHERE email = #{userId}
+          AND DATE(record_date) = #{recordDate}
         ORDER BY record_date DESC, id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>

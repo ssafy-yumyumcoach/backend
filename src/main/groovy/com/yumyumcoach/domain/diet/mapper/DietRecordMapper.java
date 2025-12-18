@@ -15,10 +15,20 @@ public interface DietRecordMapper {
 
     int deleteDietRecord(@Param("id") Long id, @Param("userId") String userId);
 
-    DietRecordDto selectDietRecordDetail(@Param("id") Long id);
+    DietRecordDto selectDietRecordDetail(
+            @Param("id") Long id,
+            @Param("userId") String userId
+    );
 
     List<DietRecordDto> selectDietRecordsByUser(
             @Param("userId") String userId,
+            @Param("offset") int offset,
+            @Param("limit") int limit
+    );
+
+    List<DietRecordDto> selectDietRecordsByUserAndDate(
+            @Param("userId") String userId,
+            @Param("recordDate") java.time.LocalDate recordDate,
             @Param("offset") int offset,
             @Param("limit") int limit
     );
