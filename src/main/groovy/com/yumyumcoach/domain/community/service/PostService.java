@@ -37,12 +37,6 @@ public class PostService {
     private final PostLikeMapper postLikeMapper;
     private final PostCommentMapper postCommentMapper;
 
-    private void requireEmail(String email) {
-        if (email == null || email.isBlank()) {
-            throw new BusinessException(ErrorCode.AUTH_UNAUTHORIZED);
-        }
-    }
-
     /**
      * 전체 게시글 목록(피드) 조회
      * - GET /api/posts
@@ -119,8 +113,6 @@ public class PostService {
      * - GET /api/posts/{postId}
      */
     public PostResponse getPost(Long postId, String loginUserEmail) {
-        requireEmail(loginUserEmail);
-
         // 1) 게시글 조회
         Post post = postMapper.findById(postId);
         if (post == null) {
@@ -164,8 +156,6 @@ public class PostService {
      */
     @Transactional
     public PostResponse createPost(String loginUserEmail, PostRequest request) {
-        requireEmail(loginUserEmail);
-
         // 1) Post 엔티티 생성
         Post post = Post.builder()
                 .authorEmail(loginUserEmail)
@@ -213,8 +203,6 @@ public class PostService {
      */
     @Transactional
     public PostResponse updatePost(String loginUserEmail, Long postId, PostRequest request) {
-        requireEmail(loginUserEmail);
-
         // 1) 기존 게시글 조회
         Post existing = postMapper.findById(postId);
         if (existing == null) {
@@ -275,8 +263,6 @@ public class PostService {
      */
     @Transactional
     public void deletePost(String loginUserEmail, Long postId) {
-        requireEmail(loginUserEmail);
-
         Post existing = postMapper.findById(postId);
         if (existing == null) {
             throw new BusinessException(ErrorCode.POST_NOT_FOUND);
@@ -303,8 +289,6 @@ public class PostService {
      */
     @Transactional
     public void likePost(String loginUserEmail, Long postId) {
-        requireEmail(loginUserEmail);
-
         // 1) 해당 게시글이 존재하는지 확인
         Post post = postMapper.findById(postId);
         if (post == null) {
@@ -334,8 +318,6 @@ public class PostService {
      */
     @Transactional
     public void unlikePost(String loginUserEmail, Long postId) {
-        requireEmail(loginUserEmail);
-
         // 1) 해당 게시글이 존재하는지 확인
         Post post = postMapper.findById(postId);
         if (post == null) {

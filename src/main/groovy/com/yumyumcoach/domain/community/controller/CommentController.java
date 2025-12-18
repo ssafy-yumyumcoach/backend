@@ -24,7 +24,7 @@ public class CommentController {
     @GetMapping
     public GetCommentsResponse getComments(@PathVariable("postId") Long postId) {
         String email = CurrentUser.email();
-        return commentService.getComments(postId, email);
+        return commentService.getComments(postId);
     }
 
     // 댓글 작성

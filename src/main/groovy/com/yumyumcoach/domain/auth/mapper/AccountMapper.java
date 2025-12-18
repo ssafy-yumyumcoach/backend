@@ -2,6 +2,7 @@ package com.yumyumcoach.domain.auth.mapper;
 
 import com.yumyumcoach.domain.auth.entity.Account;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /*
 login 로직에서 필요한 email 로 회원찾기
@@ -12,5 +13,5 @@ login 로직에서 필요한 email 로 회원찾기
 
 @Mapper
 public interface AccountMapper {
-    Account findByEmail(String email);
+    Account findByEmail(@Param("email") String email);
 }
