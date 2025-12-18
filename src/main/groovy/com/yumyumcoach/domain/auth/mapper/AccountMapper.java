@@ -15,6 +15,18 @@ login 로직에서 필요한 email 로 회원찾기
 public interface AccountMapper {
     Account findByEmail(@Param("email") String email);
 
+    // 이메일 중복 확인
+    boolean existsByEmail(@Param("email") String email);
+
+    // 닉네임(username) 중복 확인
+    boolean existsByUsername(@Param("email") String username);
+
+    // 신규 계정 저장
+    void insertNewAccount(Account account);
+
+    // 탈퇴하려는 회원의 계정 삭제
+    void deleteAccountByEmail(@Param("email") String email);
+
     /**
      * userId(id)로 이메일 조회
      * - API PathVariable(userId) -> 내부 email 변환에 사용
@@ -26,9 +38,4 @@ public interface AccountMapper {
      * - 응답에 userId가 필요할 때 사용
      */
     Long findIdByEmail(@Param("email") String email);
-
-    /**
-     * 닉네임(username) 중복 여부
-     */
-    boolean existsByUsername(@Param("username") String username);
 }

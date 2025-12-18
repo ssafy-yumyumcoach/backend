@@ -10,6 +10,27 @@
         WHERE email = #{email}
     </select>
 
+    <select id="existsByEmail" resultType="boolean">
+        SELECT COUNT(1) > 0
+        FROM accounts
+        WHERE email = #{email}
+    </select>
+
+    <select id="existsByUsername" resultType="boolean">
+        SELECT COUNT(1) > 0
+        FROM accounts
+        WHERE username = #{username}
+    </select>
+
+    <insert id="insertNewAccount">
+        INSERT INTO accounts(email, username, password)
+        VALUES (#{email}, #{username}, #{password})
+    </insert>
+
+    <delete id="deleteAccountByEmail">
+        DELETE FROM accounts
+        WHERE email = #{email}
+    </delete>
     <select id="findEmailById" resultType="string">
         SELECT email
         FROM accounts
@@ -20,13 +41,5 @@
         SELECT id
         FROM accounts
         WHERE email = #{email}
-    </select>
-
-    <select id="existsByUsername" resultType="boolean">
-        SELECT EXISTS(
-            SELECT 1
-            FROM accounts
-            WHERE username = #{username}
-        )
     </select>
 </mapper>

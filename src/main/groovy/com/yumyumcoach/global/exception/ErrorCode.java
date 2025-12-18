@@ -15,6 +15,13 @@ public enum ErrorCode {
     // ===== AUTH =====
     AUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "액세스 토큰이 유효하지 않습니다."),
     AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."),
+    AUTH_REFRESH_TOKEN_REQUIRED(HttpStatus.BAD_REQUEST, "refresh token 이 없습니다."),
+    AUTH_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 refresh token 입니다."),
+    AUTH_INVALID_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, "올바른 이메일 형식이 아닙니다."),
+    AUTH_INVALID_USERNAME_FORMAT(HttpStatus.BAD_REQUEST, "올바른 닉네임 형식이 아닙니다."),
+    AUTH_EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
+    AUTH_USERNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
+    AUTH_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "계정을 찾을 수 없습니다."),
 
     // ===== USER =====
     PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "프로필 정보를 찾을 수 없습니다."),
@@ -55,4 +62,3 @@ public enum ErrorCode {
     private final HttpStatus httpStatus;
     private final String message;
 }
-

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yumyumcoach.domain.diet.mapper.DietRecordMapper">
+
+    <!-- 식단 상세 + 음식 리스트 -->
+    <resultMap id="DietRecordDetailMap" type="com.yumyumcoach.domain.diet.dto.DietRecordDto">
+        <id column="id" property="id"/>
+        <result column="email" property="userId"/>
+        <result column="record_date" property="recordDate"/>
+        <result column="meal_type" property="mealType"/>
+        <!-- title/memo/total* 컬럼이 스키마에 없으므로 매핑 생략 (null 반환) -->
+        <collection property="items" ofType="com.yumyumcoach.domain.diet.dto.DietFoodDto">
+            <id column="diet_food_id" property="id"/>
+            <result column="diet_id" property="dietId"/>
+            <result column="food_id" property="foodId"/>
+            <result column="food_name" property="foodName"/>
+            <result column="serve_count" property="serveCount"/>
+            <result column="order_index" property="orderIndex"/>
+            <result column="calories" property="calories"/>
+            <result column="carbohydrate" property="carbs"/>
+            <result column="protein" property="protein"/>
+            <result column="fat" property="fat"/>
+            <!-- unit 컬럼이 스키마에 없으므로 매핑 생략 (null) -->
+        </collection>
+    </resultMap>
+
+    <!-- 식단 단건 상세 -->
+    <select id="selectDietRecordDetail" resultMap="DietRecordDetailMap">
+        SELECT
+            dr.id,
+            dr.email,
+            dr.record_date,
+            dr.meal_type,
+            df.id          AS diet_food_id,
+            df.diet_id,
+            df.food_id,
+            f.name         AS food_name,
+            df.serve_count,
+            df.order_index,
+            f.calories,
+            f.carbohydrate,
+            f.protein,
+            f.fat
+        FROM diet_records dr
+        LEFT JOIN diet_foods df ON dr.id = df.diet_id
+        LEFT JOIN foods f ON df.food_id = f.id
+        WHERE dr.id = #{id}
+          AND dr.email = #{userId}
+        ORDER BY df.order_index
+    </select>
+
+    <!-- 사용자별 식단 목록 (페이징) -->
+    <select id="selectDietRecordsByUser" resultType="com.yumyumcoach.domain.diet.dto.DietRecordDto">
+        SELECT
+            id,
+            email AS userId,
+            record_date AS recordDate,
+            meal_type AS mealType
+        FROM diet_records
+        WHERE email = #{userId}
+        ORDER BY record_date DESC, id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 사용자별 특정 날짜 식단 목록 (페이징) -->
+    <select id="selectDietRecordsByUserAndDate" resultType="com.yumyumcoach.domain.diet.dto.DietRecordDto">
+        SELECT
+            id,
+            email AS userId,
+            record_date AS recordDate,
+            meal_type AS mealType
+        FROM diet_records
+        WHERE email = #{userId}
+          AND DATE(record_date) = #{recordDate}
+        ORDER BY record_date DESC, id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 식단 추가 -->
+    <insert id="insertDietRecord" parameterType="com.yumyumcoach.domain.diet.dto.CreateDietRecordRequest"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO diet_records (
+            email,
+            record_date,
+            meal_type
+        ) VALUES (
+            #{userId},
+            #{recordDate},
+            #{mealType}
+        )
+    </insert>
+
+    <!-- 식단 수정 (스키마에 존재하는 필드만) -->
+    <update id="updateDietRecord" parameterType="map">
+        UPDATE diet_records
+        SET
+            record_date = #{request.recordDate},
+            meal_type   = #{request.mealType}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 식단 삭제 (소유자 확인용 userId 조건 포함) -->
+    <delete id="deleteDietRecord" parameterType="map">
+        DELETE FROM diet_records
+        WHERE id = #{id}
+          AND email = #{userId}
+    </delete>
+
+</mapper>
+
