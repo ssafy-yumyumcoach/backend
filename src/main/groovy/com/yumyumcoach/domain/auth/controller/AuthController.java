@@ -18,18 +18,18 @@ public class AuthController {
 
     // 로그인
     @PostMapping("/sign-in")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<SignInResponse> login(@Valid @RequestBody SignInRequest request) {
 
-        LoginResponse response = authService.login(request);
+        SignInResponse response = authService.SignIn(request);
 
         return ResponseEntity.ok(response);
     }
 
     // 로그아웃
     @DeleteMapping("/sign-out")
-    public ResponseEntity<LogoutResponse> logout(@AuthenticationPrincipal String email,
-                                                 @RequestBody LogoutRequest request) {
-        LogoutResponse response = authService.logout(email, request.getRefreshToken());
+    public ResponseEntity<SignOutResponse> logout(@AuthenticationPrincipal String email,
+                                                  @RequestBody SignOutRequest request) {
+        SignOutResponse response = authService.SingOut(email, request.getRefreshToken());
         return ResponseEntity.ok(response);
     }
 

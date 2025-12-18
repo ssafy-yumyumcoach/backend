@@ -46,7 +46,7 @@ public class AuthService {
 
     // 로그인: DB 에 저장된 이메일인지와 확인, 비밀번호가 일치하는지 확인 후 access token 과 refresh token 생성 후 로그인
     @Transactional(readOnly = false)
-    public LoginResponse login(LoginRequest request) {
+    public SignInResponse SignIn(SignInRequest request) {
         Account account = accountMapper.findByEmail(request.getEmail());
 
         // 해당 이메일이 DB 에 없을 때
@@ -64,7 +64,7 @@ public class AuthService {
 
         saveRefreshToken(account.getEmail(), refreshToken);
 
-        return LoginResponse.builder()
+        return SignInResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .tokenType(jwtTokenProvider.getTokenType())
@@ -76,7 +76,7 @@ public class AuthService {
 
     // 로그아웃: refresh token 유효성 검사 및 login 한 사용자와 logout 시키려는 계정의 사용자 일치 여부 확인 후 로그아웃
     @Transactional
-    public LogoutResponse logout(String authenticatedEmail, String refreshToken) {
+    public SignOutResponse SingOut(String authenticatedEmail, String refreshToken) {
 
         // refresh token 유효성 검사
         checkRefreshTokenPresence(refreshToken);
@@ -88,7 +88,7 @@ public class AuthService {
         // refresh token 삭제
         deleteRefreshToken(refreshToken, emailFromToken);
 
-        return new LogoutResponse("로그아웃 되었습니다.");
+        return new SignOutResponse("로그아웃 되었습니다.");
     }
 
     // 회원가입: 이메일/닉네임 형식 및 중복 확인 후 계정 저장

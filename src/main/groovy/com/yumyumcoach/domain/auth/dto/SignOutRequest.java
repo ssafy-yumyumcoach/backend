@@ -5,6 +5,6 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class LogoutRequest {
+public class SignOutRequest {
     String refreshToken;
 }
