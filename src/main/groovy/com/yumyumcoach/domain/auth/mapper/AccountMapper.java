@@ -2,6 +2,7 @@ package com.yumyumcoach.domain.auth.mapper;
 
 import com.yumyumcoach.domain.auth.entity.Account;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /*
 "/api/auth/..." 요청의 Mapper
@@ -10,17 +11,17 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface AccountMapper {
     // 로그인 시 필요한 이메일로 계정 찾기
-    Account findByEmail(String email);
+    Account findByEmail(@Param("email") String email);
 
     // 이메일 중복 확인
-    boolean existsByEmail(String email);
+    boolean existsByEmail(@Param("email") String email);
 
     // 닉네임(username) 중복 확인
-    boolean existsByUsername(String username);
+    boolean existsByUsername(@Param("email") String username);
 
     // 신규 계정 저장
     void insertNewAccount(Account account);
 
     // 탈퇴하려는 회원의 계정 삭제
-    void deleteAccountByEmail(String email);
+    void deleteAccountByEmail(@Param("email") String email);
 }
