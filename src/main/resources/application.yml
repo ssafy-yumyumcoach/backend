@@ -1,7 +1,6 @@
 spring:
   profiles:
     default: dev
-
 ---
 spring:
   config:
@@ -30,3 +29,10 @@ server:
 logging:
   level:
     root: info
+
+mybatis:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.yumyumcoach.domain
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
