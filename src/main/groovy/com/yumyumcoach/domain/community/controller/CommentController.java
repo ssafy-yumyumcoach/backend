@@ -4,6 +4,8 @@ import com.yumyumcoach.domain.community.dto.CommentRequest;
 import com.yumyumcoach.domain.community.dto.CommentResponse;
 import com.yumyumcoach.domain.community.dto.GetCommentsResponse;
 import com.yumyumcoach.domain.community.service.CommentService;
+import com.yumyumcoach.global.common.CurrentUser;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -16,12 +18,12 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/posts/{postId}/comments")
 public class CommentController {
-
     private final CommentService commentService;
 
     // 특정 게시글의 댓글 목록 조회
     @GetMapping
     public GetCommentsResponse getComments(@PathVariable("postId") Long postId) {
+        String email = CurrentUser.email();
         return commentService.getComments(postId);
     }
 
@@ -29,18 +31,18 @@ public class CommentController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CommentResponse createComment(@PathVariable("postId") Long postId,
-                                         @RequestBody CommentRequest request) {
-        Long loginUserId = 1L; // TODO: 인증 연동 후 실제 사용자 ID 주입
-        return commentService.createComment(loginUserId, postId, request);
+                                         @Valid @RequestBody CommentRequest request) {
+        String email = CurrentUser.email();
+        return commentService.createComment(email, postId, request);
     }
 
     // 댓글 수정
     @PutMapping("/{commentId}")
     public CommentResponse updateComment(@PathVariable("postId") Long postId,
                                          @PathVariable("commentId") Long commentId,
-                                         @RequestBody CommentRequest request) {
-        Long loginUserId = 1L; // TODO
-        return commentService.updateComment(loginUserId, postId, commentId, request);
+                                         @Valid @RequestBody CommentRequest request) {
+        String email = CurrentUser.email();
+        return commentService.updateComment(email, postId, commentId, request);
     }
 
     // 댓글 삭제
@@ -48,8 +50,8 @@ public class CommentController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteComment(@PathVariable("postId") Long postId,
                               @PathVariable("commentId") Long commentId) {
-        Long loginUserId = 1L; // TODO
-        commentService.deleteComment(loginUserId, postId, commentId);
+        String email = CurrentUser.email();
+        commentService.deleteComment(email, postId, commentId);
     }
 }
 

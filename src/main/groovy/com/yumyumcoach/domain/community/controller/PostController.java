@@ -5,6 +5,8 @@ import com.yumyumcoach.domain.community.dto.GetPostsResponse;
 import com.yumyumcoach.domain.community.dto.PostRequest;
 import com.yumyumcoach.domain.community.dto.PostResponse;
 import com.yumyumcoach.domain.community.service.PostService;
+import com.yumyumcoach.global.common.CurrentUser;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -22,53 +24,53 @@ public class PostController {
     // 전체 게시글 목록 조회
     @GetMapping
     public GetPostsResponse getPosts(GetPostsRequest request) {
-        Long loginUserId = 1L; // TODO: 인증 연동 후 교체
-        return postService.getPosts(request, loginUserId);
+        String email = CurrentUser.email();
+        return postService.getPosts(request, email);
     }
 
     // 게시글 상세 조회
     @GetMapping("/{postId}")
     public PostResponse getPost(@PathVariable("postId") Long postId) {
-        Long loginUserId = 1L; // TODO: 인증 연동 후 교체
-        return postService.getPost(postId, loginUserId);
+        String email = CurrentUser.email();
+        return postService.getPost(postId, email);
     }
 
     // 게시글 작성
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PostResponse post(@RequestBody PostRequest request) {
-        Long loginUserId = 1L; // TODO: 인증 연동 후 교체
-        return postService.createPost(loginUserId, request);
+    public PostResponse post(@Valid @RequestBody PostRequest request) {
+        String email = CurrentUser.email();
+        return postService.createPost(email, request);
     }
 
     // 게시글 수정
     @PutMapping("/{postId}")
-    public PostResponse updatePost(@PathVariable("postId") Long postId, @RequestBody PostRequest request) {
-        Long loginUserId = 1L; // TODO: 인증 연동 후 교체
-        return postService.updatePost(loginUserId, postId, request);
+    public PostResponse updatePost(@PathVariable("postId") Long postId, @Valid @RequestBody PostRequest request) {
+        String email = CurrentUser.email();
+        return postService.updatePost(email, postId, request);
     }
 
     // 게시글 삭제
     @DeleteMapping("/{postId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePost(@PathVariable("postId") Long postId) {
-        Long loginUserId = 1L; // TODO: 인증 연동 후 교체
-        postService.deletePost(loginUserId, postId);
+        String email = CurrentUser.email();
+        postService.deletePost(email, postId);
     }
 
     // 게시글 좋아요
     @PostMapping("/{postId}/like")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void likePost(@PathVariable("postId") Long postId) {
-        Long loginUserId = 1L; // TODO: 인증 연동 후 교체
-        postService.likePost(loginUserId, postId);
+        String email = CurrentUser.email();
+        postService.likePost(email, postId);
     }
 
     // 게시글 좋아요 취소
     @DeleteMapping("/{postId}/like")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void unlikePost(@PathVariable("postId") Long postId) {
-        Long loginUserId = 1L; // TODO: 인증 연동 후 교체
-        postService.unlikePost(loginUserId, postId);
+        String email = CurrentUser.email();
+        postService.unlikePost(email, postId);
     }
 }

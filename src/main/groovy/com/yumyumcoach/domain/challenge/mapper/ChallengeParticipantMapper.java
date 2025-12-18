@@ -83,4 +83,13 @@ public interface ChallengeParticipantMapper {
             @Param("challengeId") Long challengeId,
             @Param("email") String email
     );
+
+    /**
+     * 특정 챌린지에 참여한 전체 인원 수를 조회한다.
+     *
+     * @param challengeId 챌린지 ID
+     * @return 참여 인원 수
+     */
+    int countByChallengeId(@Param("challengeId") Long challengeId);
+
 }

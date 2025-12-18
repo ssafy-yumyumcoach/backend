@@ -1,5 +1,7 @@
 package com.yumyumcoach.domain.community.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,11 +23,15 @@ public class PostRequest {
     /**
      * 게시글 제목
      */
+    @NotBlank(message = "제목은 필수입니다.")
+    @Size(max = 100, message = "제목은 100자 이하여야 합니다.")
     private String title;
 
     /**
      * 게시글 본문
      */
+    @NotBlank(message = "내용은 필수입니다.")
+    @Size(max = 2000, message = "내용은 2000자 이하여야 합니다.")
     private String content;
 
     /**
