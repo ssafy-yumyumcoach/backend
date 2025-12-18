@@ -11,6 +11,7 @@ import com.yumyumcoach.domain.community.mapper.PostCommentMapper;
 import com.yumyumcoach.domain.community.mapper.PostImageMapper;
 import com.yumyumcoach.domain.community.mapper.PostLikeMapper;
 import com.yumyumcoach.domain.community.mapper.PostMapper;
+import com.yumyumcoach.global.common.CdnUrlResolver;
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class PostService {
     private final PostImageMapper postImageMapper;
     private final PostLikeMapper postLikeMapper;
     private final PostCommentMapper postCommentMapper;
+    private final CdnUrlResolver cdnUrlResolver;
 
     /**
      * 전체 게시글 목록(피드) 조회
@@ -70,6 +72,7 @@ public class PostService {
                     List<PostImage> postImages = postImageMapper.findByPostId(postId);
                     List<String> imageUrls = postImages.stream()
                             .map(PostImage::getImageUrl)
+                            .map(cdnUrlResolver::resolve)
                             .toList();
                     // 댓글 개수
                     long commentCount = postCommentMapper.countByPostId(postId);
@@ -123,6 +126,7 @@ public class PostService {
         List<PostImage> postImages = postImageMapper.findByPostId(postId);
         List<String> imageUrls = postImages.stream()
                 .map(PostImage::getImageUrl)
+                .map(cdnUrlResolver::resolve)
                 .toList();
 
         // 3) 댓글 개수 조회
@@ -132,7 +136,7 @@ public class PostService {
         int likeCount = post.getLikes();
 
         // 5) 현재 유저가 좋아요 눌렀는지 여부
-        boolean isLikedByMe =  postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
+        boolean isLikedByMe = postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
 
         return PostResponse.builder()
                 .postId(post.getId())
@@ -181,6 +185,11 @@ public class PostService {
             postImageMapper.insert(postImage);
         }
 
+        // 4) 응답용은 objectKey -> CloudFront URL로 변환
+        List<String> imageCdnUrls = images.stream()
+                .map(cdnUrlResolver::resolve)
+                .toList();
+
         return PostResponse.builder()
                 .postId(postId)
                 .authorId(null)               // TODO: User 도메인 연동 후 세팅
@@ -188,7 +197,7 @@ public class PostService {
                 .authorProfileImageUrl(null)
                 .title(post.getTitle())
                 .content(post.getContent())
-                .images(images)
+                .images(imageCdnUrls)
                 .likeCount(0)
                 .commentCount(0)
                 .isLikedByMe(false)
@@ -239,7 +248,12 @@ public class PostService {
         // 4) 댓글 수, 좋아요 수, isLikedByMe 다시 조회
         long commentCount = postCommentMapper.countByPostId(postId);
         int likeCount = existing.getLikes();
-        boolean isLikedByMe =   postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
+        boolean isLikedByMe = postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
+
+        // 5) 응답용은 objectKey -> CloudFront URL로 변환
+        List<String> imageCdnUrls = images.stream()
+                .map(cdnUrlResolver::resolve)
+                .toList();
 
         return PostResponse.builder()
                 .postId(postId)
@@ -248,7 +262,7 @@ public class PostService {
                 .authorProfileImageUrl(null)
                 .title(request.getTitle())
                 .content(request.getContent())
-                .images(images)
+                .images(imageCdnUrls)
                 .likeCount(likeCount)
                 .commentCount((int) commentCount)
                 .isLikedByMe(isLikedByMe)

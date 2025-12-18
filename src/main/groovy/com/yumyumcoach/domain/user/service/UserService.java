@@ -10,6 +10,7 @@ import com.yumyumcoach.domain.user.entity.Profile;
 import com.yumyumcoach.domain.user.mapper.FollowMapper;
 import com.yumyumcoach.domain.user.mapper.ProfileMapper;
 import com.yumyumcoach.domain.user.mapper.UserTitleMapper;
+import com.yumyumcoach.global.common.CdnUrlResolver;
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class UserService {
     private final ProfileMapper profileMapper;
     private final FollowMapper followMapper;
     private final UserTitleMapper userTitleMapper;
+    private final CdnUrlResolver cdnUrlResolver;
 
     public MyPageResponse getMyPage(String email) {
 
@@ -51,7 +53,7 @@ public class UserService {
                         .userId(userId)
                         .email(email)
                         .username(account.getUsername())
-                        .profileImageUrl(profile.getProfileImageUrl())
+                        .profileImageUrl(cdnUrlResolver.resolve(profile.getProfileImageUrl()))
                         .introduction(profile.getIntroduction())
                         .build())
                 .health(MyPageResponse.Health.builder()
@@ -108,7 +110,7 @@ public class UserService {
                 .userId(userId)
                 .email(email)
                 .username(account.getUsername())
-                .profileImageUrl(updated.getProfileImageUrl())
+                .profileImageUrl(cdnUrlResolver.resolve(updated.getProfileImageUrl()))
                 .introduction(updated.getIntroduction())
                 .build();
     }
