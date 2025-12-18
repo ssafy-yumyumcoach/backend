@@ -2,6 +2,7 @@ package com.yumyumcoach.domain.auth.service;
 
 import com.yumyumcoach.domain.auth.dto.*;
 import com.yumyumcoach.domain.auth.entity.Account;
+import com.yumyumcoach.domain.auth.entity.RefreshToken;
 import com.yumyumcoach.domain.auth.mapper.AccountMapper;
 import com.yumyumcoach.domain.auth.mapper.RefreshTokenMapper;
 import com.yumyumcoach.global.exception.BusinessException;
@@ -136,6 +137,38 @@ public class AuthService {
         accountMapper.deleteAccountByEmail(authenticatedEmail);
 
         return new WithdrawResponse("회원탈퇴가 완료되었습니다.");
+    }
+
+    @Transactional
+    public RefreshResponse refreshTokens(RefreshRequest request) {
+
+         // refresh token 검증
+        checkRefreshTokenPresence(request.getRefreshToken());
+        jwtTokenProvider.validateToken(request.getRefreshToken());
+
+        // 클라이언트가 보낸 refresh token 이 이 서버에 저장된 것과 일치하는지 확인
+        String emailFromToken = jwtTokenProvider.getEmail(request.getRefreshToken());
+        String tokenHash = TokenHashUtil.sha256Hex(request.getRefreshToken());
+
+        RefreshToken savedToken = refreshTokenMapper.findByEmailAndHash(emailFromToken, tokenHash);
+        if (savedToken == null) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
+        }
+
+        // 새 토큰들 형성
+        String newAccessToken = jwtTokenProvider.createAccessToken(emailFromToken);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(emailFromToken);
+
+        // 새 refresh token 해시로 교체(회전)
+        saveRefreshToken(emailFromToken, newRefreshToken);
+
+        return new RefreshResponse(
+                newAccessToken,
+                newRefreshToken,
+                jwtTokenProvider.getTokenType(),
+                jwtTokenProvider.getAccessTokenExpirationSeconds(),
+                jwtTokenProvider.getRefreshTokenExpirationSeconds()
+        );
     }
 
     private static void validateEmail(String email) {

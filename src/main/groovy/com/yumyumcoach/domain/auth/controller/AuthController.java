@@ -61,4 +61,10 @@ public class AuthController {
         WithdrawResponse response = authService.withdraw(email, request);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+        RefreshResponse response = authService.refreshTokens(request);
+        return ResponseEntity.ok(response);
+    }
 }

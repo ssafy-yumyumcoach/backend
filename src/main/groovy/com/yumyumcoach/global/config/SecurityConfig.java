@@ -42,7 +42,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/sign-in",
                                 "/api/auth/check-email",
                                 "/api/auth/check-username",
-                                "/api/auth/sign-up").permitAll()
+                                "/api/auth/sign-up",
+                                "/api/auth/refresh").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
