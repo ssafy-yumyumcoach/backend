@@ -14,4 +14,21 @@ login 로직에서 필요한 email 로 회원찾기
 @Mapper
 public interface AccountMapper {
     Account findByEmail(@Param("email") String email);
+
+    /**
+     * userId(id)로 이메일 조회
+     * - API PathVariable(userId) -> 내부 email 변환에 사용
+     */
+    String findEmailById(@Param("id") Long id);
+
+    /**
+     * 이메일로 userId(id) 조회
+     * - 응답에 userId가 필요할 때 사용
+     */
+    Long findIdByEmail(@Param("email") String email);
+
+    /**
+     * 닉네임(username) 중복 여부
+     */
+    boolean existsByUsername(@Param("username") String username);
 }

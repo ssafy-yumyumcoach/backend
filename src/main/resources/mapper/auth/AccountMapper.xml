@@ -10,4 +10,23 @@
         WHERE email = #{email}
     </select>
 
+    <select id="findEmailById" resultType="string">
+        SELECT email
+        FROM accounts
+        WHERE id = #{id}
+    </select>
+
+    <select id="findIdByEmail" resultType="long">
+        SELECT id
+        FROM accounts
+        WHERE email = #{email}
+    </select>
+
+    <select id="existsByUsername" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM accounts
+            WHERE username = #{username}
+        )
+    </select>
 </mapper>
