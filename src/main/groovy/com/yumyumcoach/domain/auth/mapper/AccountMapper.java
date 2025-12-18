@@ -20,4 +20,7 @@ public interface AccountMapper {
 
     // 신규 계정 저장
     void insertNewAccount(Account account);
+
+    // 탈퇴하려는 회원의 계정 삭제
+    void deleteAccountByEmail(String email);
 }

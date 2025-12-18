@@ -26,5 +26,9 @@
         INSERT INTO accounts(email, username, password)
         VALUES (#{email}, #{username}, #{password})
     </insert>
-
+    
+    <delete id="deleteAccountByEmail">
+        DELETE FROM accounts
+        WHERE email = #{email}
+    </delete>
 </mapper>

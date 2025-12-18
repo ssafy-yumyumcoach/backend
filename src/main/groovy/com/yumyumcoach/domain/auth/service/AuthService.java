@@ -1,10 +1,6 @@
 package com.yumyumcoach.domain.auth.service;
 
-import com.yumyumcoach.domain.auth.dto.LoginRequest;
-import com.yumyumcoach.domain.auth.dto.LoginResponse;
-import com.yumyumcoach.domain.auth.dto.UserInfo;
-import com.yumyumcoach.domain.auth.dto.SignUpRequest;
-import com.yumyumcoach.domain.auth.dto.SignUpResponse;
+import com.yumyumcoach.domain.auth.dto.*;
 import com.yumyumcoach.domain.auth.entity.Account;
 import com.yumyumcoach.domain.auth.mapper.AccountMapper;
 import com.yumyumcoach.domain.auth.mapper.RefreshTokenMapper;
@@ -79,32 +75,19 @@ public class AuthService {
 
     // 로그아웃: refresh token 유효성 검사 및 login 한 사용자와 logout 시키려는 계정의 사용자 일치 여부 확인 후 로그아웃
     @Transactional
-    public void logout(String authenticatedEmail, String refreshToken) {
-        if (refreshToken == null || refreshToken.isBlank()) {
-            throw new BusinessException(ErrorCode.AUTH_REFRESH_TOKEN_REQUIRED);
-        }
+    public LogoutResponse logout(String authenticatedEmail, String refreshToken) {
 
+        // refresh token 유효성 검사
+        checkRefreshTokenPresence(refreshToken);
         jwtTokenProvider.validateToken(refreshToken);
-        String emailFromToken = jwtTokenProvider.getEmail(refreshToken);
 
-        if (authenticatedEmail == null || !authenticatedEmail.equals(emailFromToken)) {
-            throw new BusinessException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN, "사용자 정보가 일치하지 않습니다.");
-        }
+        // 두 토큰의 실제 소유주가 같은지 검증
+        String emailFromToken = validateTokenOwnership(authenticatedEmail, refreshToken);
 
-        String tokenHash = TokenHashUtil.sha256Hex(refreshToken);
+        // refresh token 삭제
+        deleteRefreshToken(refreshToken, emailFromToken);
 
-        int deleted = refreshTokenMapper.deleteByEmailAndHash(emailFromToken, tokenHash);
-        if (deleted == 0) {
-            throw new BusinessException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
-        }
-    }
-
-
-    private void saveRefreshToken(String email, String refreshToken) {
-        String tokenHash = TokenHashUtil.sha256Hex(refreshToken);
-        LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(jwtTokenProvider.getRefreshTokenExpirationSeconds());
-        refreshTokenMapper.upsert(email, tokenHash, expiresAt);
+        return new LogoutResponse("로그아웃 되었습니다.");
     }
 
     // 회원가입: 이메일/닉네임 형식 및 중복 확인 후 계정 저장
@@ -124,6 +107,37 @@ public class AuthService {
         return new SignUpResponse(request.getEmail(), request.getUsername());
     }
 
+    // 회원탈퇴: 회원 탈퇴 하려는 사용자의 계정을 DB 에서 삭제
+    @Transactional
+    public WithdrawResponse withdraw(String authenticatedEmail, WithdrawRequest request) {
+
+        // refresh token 존재 여부 및 유효성 검사
+        checkRefreshTokenPresence(request.getRefreshToken());
+        jwtTokenProvider.validateToken(request.getRefreshToken());
+
+        // 로그인한 사용자와 회원탈퇴 계정의 사용자 일치여부 확인
+        String emailFromToken = validateTokenOwnership(authenticatedEmail, request.getRefreshToken());
+
+        // 계정 조회
+        Account account = accountMapper.findByEmail(authenticatedEmail);
+        if (account == null) {
+            throw new BusinessException(ErrorCode.AUTH_ACCOUNT_NOT_FOUND);
+        }
+
+        // 비밀번호 확인
+        if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID_CREDENTIALS, "비밀번호가 일치하지 않습니다.");
+        }
+
+        // refresh token 삭제
+        deleteRefreshToken(request.getRefreshToken(), emailFromToken);
+
+        // 계정 삭제
+        accountMapper.deleteAccountByEmail(authenticatedEmail);
+
+        return new WithdrawResponse("회원탈퇴가 완료되었습니다.");
+    }
+
     private static void validateEmail(String email) {
         if (email == null || email.isBlank() || !EMAIL_PATTERN.matcher(email).matches()) {
             throw new BusinessException(ErrorCode.AUTH_INVALID_EMAIL_FORMAT);
@@ -140,5 +154,34 @@ public class AuthService {
         String encodedPassword = passwordEncoder.encode(request.getPassword());
         Account newAccount = new Account(request.getEmail(), request.getUsername(), encodedPassword);
         accountMapper.insertNewAccount(newAccount);
+    }
+
+    private void saveRefreshToken(String email, String refreshToken) {
+        String tokenHash = TokenHashUtil.sha256Hex(refreshToken);
+        LocalDateTime expiresAt = LocalDateTime.now()
+                .plusSeconds(jwtTokenProvider.getRefreshTokenExpirationSeconds());
+        refreshTokenMapper.upsert(email, tokenHash, expiresAt);
+    }
+
+    private static void checkRefreshTokenPresence(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new BusinessException(ErrorCode.AUTH_REFRESH_TOKEN_REQUIRED);
+        }
+    }
+
+    private String validateTokenOwnership(String authenticatedEmail, String refreshToken) {
+        String emailFromToken = jwtTokenProvider.getEmail(refreshToken);
+        if (authenticatedEmail == null || !authenticatedEmail.equals(emailFromToken)) {
+            throw new BusinessException(ErrorCode.AUTH_UNAUTHORIZED, "사용자 정보가 일치하지 않습니다.");
+        }
+        return emailFromToken;
+    }
+
+    private void deleteRefreshToken(String refreshToken, String emailFromToken) {
+        String tokenHash = TokenHashUtil.sha256Hex(refreshToken);
+        int deleted = refreshTokenMapper.deleteByEmailAndHash(emailFromToken, tokenHash);
+        if (deleted == 0) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
+        }
     }
 }
