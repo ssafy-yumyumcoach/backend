@@ -32,6 +32,6 @@ logging:
     root: info
 
 aws:
-  region: ${AWS_REGION}
+  region: ap-northeast-2
   s3:
-    bucket: ${AWS_S3_BUCKET}
+    bucket: yumyumcoach-dev-bucket
