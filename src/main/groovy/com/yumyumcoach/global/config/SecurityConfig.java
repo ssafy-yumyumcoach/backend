@@ -39,7 +39,11 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/sign-in",
+                                "/api/auth/check-email",
+                                "/api/auth/check-username",
+                                "/api/auth/sign-up",
+                                "/api/auth/refresh").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -52,4 +56,3 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
-

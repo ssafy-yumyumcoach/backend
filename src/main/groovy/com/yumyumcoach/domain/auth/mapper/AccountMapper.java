@@ -5,13 +5,23 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /*
-login 로직에서 필요한 email 로 회원찾기
-
-성공 시: 해당 Account 반환
-실패 시: null 반환
+"/api/auth/..." 요청의 Mapper
  */
 
 @Mapper
 public interface AccountMapper {
+    // 로그인 시 필요한 이메일로 계정 찾기
     Account findByEmail(@Param("email") String email);
+
+    // 이메일 중복 확인
+    boolean existsByEmail(@Param("email") String email);
+
+    // 닉네임(username) 중복 확인
+    boolean existsByUsername(@Param("email") String username);
+
+    // 신규 계정 저장
+    void insertNewAccount(Account account);
+
+    // 탈퇴하려는 회원의 계정 삭제
+    void deleteAccountByEmail(@Param("email") String email);
 }
