@@ -109,10 +109,13 @@ public class ExerciseService {
         }
 
         Profile profile = profileMapper.findByEmail(email);
+        if (profile == null) {
+            throw new BusinessException(ErrorCode.PROFILE_NOT_FOUND);
+        }
         Double currentWeight = profile.getCurrentWeight();
         if (currentWeight == null) {
-            // TODO: 500 에러 대신 다른 에러로 교체하기
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            // 몸무게가 지정이 안되어있으면 기본값인 60으로 계산
+            currentWeight = 60.0;
         }
 
         double durationHours = durationMinutes / 60.0;
