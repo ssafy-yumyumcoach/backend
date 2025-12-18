@@ -35,3 +35,4 @@ aws:
   region: ap-northeast-2
   s3:
     bucket: yumyumcoach-dev-bucket
+  cdn-base-url: https://d3sn2183nped6z.cloudfront.net
