@@ -1,5 +1,6 @@
 package com.yumyumcoach.domain.diet.controller;
 
+import com.yumyumcoach.domain.diet.dto.CreateDietRecordRequest;
 import com.yumyumcoach.domain.diet.dto.DietRecordDto;
 import com.yumyumcoach.domain.diet.service.DietRecordService;
 import java.security.Principal;
@@ -38,17 +39,17 @@ public class DietRecordController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
-        String userId = principal.getName();
-        return ResponseEntity.ok(dietRecordService.getMyDiets(userId, date, page, size));
+        String email = principal.getName();
+        return ResponseEntity.ok(dietRecordService.getMyDiets(email, date, page, size));
     }
 
     @GetMapping("/{dietId}")
     public ResponseEntity<DietRecordDto> getMyDietDetail(
             Principal principal,
-            @PathVariable Long dietId
+            @PathVariable("dietId") Long dietId
     ) {
-        String userId = principal.getName();
-        DietRecordDto dto = dietRecordService.getMyDietDetail(userId, dietId);
+        String email = principal.getName();
+        DietRecordDto dto = dietRecordService.getMyDietDetail(email, dietId);
         if (dto == null) {
             return ResponseEntity.notFound().build();
         }
@@ -58,31 +59,31 @@ public class DietRecordController {
     @PostMapping
     public ResponseEntity<Long> createMyDiet(
             Principal principal,
-            @Valid @RequestBody com.yumyumcoach.domain.diet.dto.CreateDietRecordRequest request
+            @Valid @RequestBody CreateDietRecordRequest request
     ) {
-        String userId = principal.getName();
-        Long dietId = dietRecordService.createMyDiet(userId, request);
+        String email = principal.getName();
+        Long dietId = dietRecordService.createMyDiet(email, request);
         return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(dietId);
     }
 
     @DeleteMapping("/{dietId}")
     public ResponseEntity<Void> deleteMyDiet(
             Principal principal,
-            @PathVariable Long dietId
+            @PathVariable("dietId") Long dietId
     ) {
-        String userId = principal.getName();
-        dietRecordService.deleteMyDiet(userId, dietId);
+        String email = principal.getName();
+        dietRecordService.deleteMyDiet(email, dietId);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{dietId}")
     public ResponseEntity<Void> updateMyDiet(
             Principal principal,
-            @PathVariable Long dietId,
-            @Valid @RequestBody com.yumyumcoach.domain.diet.dto.CreateDietRecordRequest request
+            @PathVariable("dietId") Long dietId,
+            @Valid @RequestBody CreateDietRecordRequest request
     ) {
-        String userId = principal.getName();
-        dietRecordService.updateMyDiet(userId, dietId, request);
+        String email = principal.getName();
+        dietRecordService.updateMyDiet(email, dietId, request);
         return ResponseEntity.ok().build();
     }
 }

@@ -50,6 +50,11 @@ public enum ErrorCode {
     CHALLENGE_LEAVE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "현재는 해당 챌린지에서 나갈 수 없습니다."),
     CHALLENGE_ALREADY_LEFT(HttpStatus.CONFLICT, "이미 나간 챌린지입니다."),
 
+    // ===== DIET =====
+    FOOD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 음식을 찾을 수 없습니다."),
+    DIET_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 식단을 찾을 수 없습니다."),
+    DIET_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 식단에 대한 권한이 없습니다."),
+
     // ===== EXERCISE =====
     EXERCISE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 운동을 찾을 수 없습니다."),
     EXERCISE_RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 운동 기록을 찾을 수 없습니다."),

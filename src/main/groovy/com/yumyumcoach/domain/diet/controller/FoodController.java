@@ -46,13 +46,13 @@ public class FoodController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFood(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteFood(@PathVariable("id") Long id) {
         foodService.deleteFood(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{foodId}")
-    public ResponseEntity<FoodDto> getFoodDetail(@PathVariable Long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<FoodDto> getFoodDetail(@PathVariable("id") Long id) {
         return ResponseEntity.ok(foodService.getFoodDetail(id));
     }
 
