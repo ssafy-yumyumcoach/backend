@@ -91,7 +91,8 @@ public class ImagePresignService {
                 yield "profiles/" + userId + "/" + uuid + "." + ext;
             }
             case POST -> "posts/temp/" + uuid + "." + ext;
-            case MEAL -> "meals/temp/" + uuid + "." + ext;
+            case DIET -> "diets/temp/" + uuid + "." + ext;
+            case CHALLENGE -> "challenges/" + uuid + "." + ext;
         };
     }
 
