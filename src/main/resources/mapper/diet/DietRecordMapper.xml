@@ -10,6 +10,7 @@
         <id column="id" property="id"/>
         <result column="record_date" property="recordDate"/>
         <result column="meal_type" property="mealType"/>
+        <result column="image_url" property="imageUrl"/>
 
         <collection property="items" ofType="com.yumyumcoach.domain.diet.dto.DietFoodDto">
             <id column="diet_food_id" property="id"/>
@@ -31,6 +32,7 @@
             dr.id,
             DATE(dr.record_date) AS record_date,
             dr.meal_type,
+            dr.image_url,
             df.id          AS diet_food_id,
             df.diet_id,
             df.food_id,
@@ -54,7 +56,8 @@
         SELECT
             id,
             DATE(record_date) AS recordDate,
-            meal_type         AS mealType
+            meal_type         AS mealType,
+            image_url         AS imageUrl
         FROM diet_records
         WHERE email = #{email}
         ORDER BY record_date DESC, id DESC
@@ -66,7 +69,8 @@
         SELECT
             id,
             DATE(record_date) AS recordDate,
-            meal_type         AS mealType
+            meal_type         AS mealType,
+            image_url         AS imageUrl
         FROM diet_records
         WHERE email = #{email}
           AND DATE(record_date) = #{recordDate}
@@ -82,11 +86,13 @@
         INSERT INTO diet_records (
             email,
             record_date,
-            meal_type
+            meal_type,
+            image_url
         ) VALUES (
                      #{email},
                      #{req.recordDate},
-                     #{req.mealType}
+                     #{req.mealType},
+                     #{req.imageUrl}
                  )
     </insert>
 
@@ -96,6 +102,7 @@
         SET
             record_date = #{req.recordDate},
             meal_type   = #{req.mealType}
+            image_url   = #{req.imageUrl}
         WHERE id = #{id}
           AND email = #{email}
     </update>
@@ -107,12 +114,10 @@
           AND email = #{email}
     </delete>
 
-    <select id="existsById" resultType="boolean">
-        SELECT EXISTS(SELECT 1 FROM diet_records WHERE id = #{id})
-    </select>
-
-    <select id="existsByIdAndEmail" resultType="boolean">
-        SELECT EXISTS(SELECT 1 FROM diet_records WHERE id = #{id} AND email = #{email})
+    <select id="selectOwnerEmail" resultType="string">
+        SELECT email
+        FROM diet_records
+        WHERE id = #{id}
     </select>
 
 </mapper>
