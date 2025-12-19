@@ -12,7 +12,7 @@ public interface FoodMapper {
 
     int insertFood(CreateFoodRequest request);
 
-    int updateFood(@Param("id") Long id, UpdateFoodRequest request);
+    int updateFood(@Param("id") Long id, @Param("request") UpdateFoodRequest request);
 
     int deleteFood(@Param("id") Long id);
 

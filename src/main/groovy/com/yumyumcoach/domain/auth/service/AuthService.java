@@ -185,7 +185,7 @@ public class AuthService {
 
     private void createAccount(SignUpRequest request) {
         String encodedPassword = passwordEncoder.encode(request.getPassword());
-        Account newAccount = new Account(request.getEmail(), request.getUsername(), encodedPassword);
+        Account newAccount = new Account(null, request.getEmail(), request.getUsername(), encodedPassword);
         accountMapper.insertNewAccount(newAccount);
     }
 

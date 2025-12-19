@@ -36,7 +36,7 @@ public class PostResponse {
     private String authorUsername;
 
     /**
-     * 작성자 프로필 이미지 URL
+     * 작성자 프로필 이미지 URL (CloudFront URL)
      */
     private String authorProfileImageUrl;
 
@@ -52,7 +52,7 @@ public class PostResponse {
     private String content;
 
     /**
-     * 게시글에 포함된 이미지 전체 URL 목록
+     * 게시글 이미지 URL 목록 (CloudFront URL)
      * - post_images 테이블 기반 (order_index 오름차순 정렬 권장)
      * - 목록에서는 첫 번째 이미지만 썸네일로 사용할 수 있음
      */

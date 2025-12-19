@@ -26,9 +26,20 @@
         INSERT INTO accounts(email, username, password)
         VALUES (#{email}, #{username}, #{password})
     </insert>
-    
+
     <delete id="deleteAccountByEmail">
         DELETE FROM accounts
         WHERE email = #{email}
     </delete>
+    <select id="findEmailById" resultType="string">
+        SELECT email
+        FROM accounts
+        WHERE id = #{id}
+    </select>
+
+    <select id="findIdByEmail" resultType="long">
+        SELECT id
+        FROM accounts
+        WHERE email = #{email}
+    </select>
 </mapper>

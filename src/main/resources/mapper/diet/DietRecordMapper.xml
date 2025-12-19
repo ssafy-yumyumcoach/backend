@@ -8,10 +8,9 @@
     <!-- 식단 상세 + 음식 리스트 -->
     <resultMap id="DietRecordDetailMap" type="com.yumyumcoach.domain.diet.dto.DietRecordDto">
         <id column="id" property="id"/>
-        <result column="email" property="userId"/>
         <result column="record_date" property="recordDate"/>
         <result column="meal_type" property="mealType"/>
-        <!-- title/memo/total* 컬럼이 스키마에 없으므로 매핑 생략 (null 반환) -->
+
         <collection property="items" ofType="com.yumyumcoach.domain.diet.dto.DietFoodDto">
             <id column="diet_food_id" property="id"/>
             <result column="diet_id" property="dietId"/>
@@ -23,7 +22,6 @@
             <result column="carbohydrate" property="carbs"/>
             <result column="protein" property="protein"/>
             <result column="fat" property="fat"/>
-            <!-- unit 컬럼이 스키마에 없으므로 매핑 생략 (null) -->
         </collection>
     </resultMap>
 
@@ -31,8 +29,7 @@
     <select id="selectDietRecordDetail" resultMap="DietRecordDetailMap">
         SELECT
             dr.id,
-            dr.email,
-            dr.record_date,
+            DATE(dr.record_date) AS record_date,
             dr.meal_type,
             df.id          AS diet_food_id,
             df.diet_id,
@@ -45,10 +42,10 @@
             f.protein,
             f.fat
         FROM diet_records dr
-        LEFT JOIN diet_foods df ON dr.id = df.diet_id
-        LEFT JOIN foods f ON df.food_id = f.id
+                 LEFT JOIN diet_foods df ON dr.id = df.diet_id
+                 LEFT JOIN foods f ON df.food_id = f.id
         WHERE dr.id = #{id}
-          AND dr.email = #{userId}
+          AND dr.email = #{email}
         ORDER BY df.order_index
     </select>
 
@@ -56,11 +53,10 @@
     <select id="selectDietRecordsByUser" resultType="com.yumyumcoach.domain.diet.dto.DietRecordDto">
         SELECT
             id,
-            email AS userId,
-            record_date AS recordDate,
-            meal_type AS mealType
+            DATE(record_date) AS recordDate,
+            meal_type         AS mealType
         FROM diet_records
-        WHERE email = #{userId}
+        WHERE email = #{email}
         ORDER BY record_date DESC, id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -69,45 +65,55 @@
     <select id="selectDietRecordsByUserAndDate" resultType="com.yumyumcoach.domain.diet.dto.DietRecordDto">
         SELECT
             id,
-            email AS userId,
-            record_date AS recordDate,
-            meal_type AS mealType
+            DATE(record_date) AS recordDate,
+            meal_type         AS mealType
         FROM diet_records
-        WHERE email = #{userId}
+        WHERE email = #{email}
           AND DATE(record_date) = #{recordDate}
         ORDER BY record_date DESC, id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <!-- 식단 추가 -->
-    <insert id="insertDietRecord" parameterType="com.yumyumcoach.domain.diet.dto.CreateDietRecordRequest"
-            useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertDietRecord"
+            parameterType="map"
+            useGeneratedKeys="true"
+            keyProperty="req.id">
         INSERT INTO diet_records (
             email,
             record_date,
             meal_type
         ) VALUES (
-            #{userId},
-            #{recordDate},
-            #{mealType}
-        )
+                     #{email},
+                     #{req.recordDate},
+                     #{req.mealType}
+                 )
     </insert>
 
-    <!-- 식단 수정 (스키마에 존재하는 필드만) -->
+    <!-- 식단 수정 (소유자 체크까지 같이) -->
     <update id="updateDietRecord" parameterType="map">
         UPDATE diet_records
         SET
-            record_date = #{request.recordDate},
-            meal_type   = #{request.mealType}
+            record_date = #{req.recordDate},
+            meal_type   = #{req.mealType}
         WHERE id = #{id}
+          AND email = #{email}
     </update>
 
-    <!-- 식단 삭제 (소유자 확인용 userId 조건 포함) -->
+    <!-- 식단 삭제 -->
     <delete id="deleteDietRecord" parameterType="map">
         DELETE FROM diet_records
         WHERE id = #{id}
-          AND email = #{userId}
+          AND email = #{email}
     </delete>
+
+    <select id="existsById" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM diet_records WHERE id = #{id})
+    </select>
+
+    <select id="existsByIdAndEmail" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM diet_records WHERE id = #{id} AND email = #{email})
+    </select>
 
 </mapper>
 

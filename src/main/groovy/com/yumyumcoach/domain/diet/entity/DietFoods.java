@@ -1,39 +1,25 @@
 package com.yumyumcoach.domain.diet.entity;
 
+import lombok.*;
+
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DietFoods {
 
-  private Long id;
+    private Long id;
 
-  private DietRecords dietId;
-  
-  private Integer orderIndex;
-  
-  private Foods foodId;
-  
-  private Double weight;
-  
-  protected DietFoods() {}
-  
-  public DietFoods(DietRecords dietId, Integer orderIndex, Foods foodId, Double weight) {
-    this.dietId = dietId;
-    this.orderIndex = orderIndex;
-    this.foodId = foodId;
-    this.weight = weight;
-  }
+    private DietRecords dietId;   // FK(식단)
+    private Integer orderIndex;
 
-  public Long getId() {
-    return id;
-  }
-  public DietRecords getDietId() {
-    return dietId;
-  }
-  public Integer getOrderIndex() {
-    return orderIndex;
-  }
-  public Foods getFoodId() {
-    return foodId;
-  }
-  public Double getWeight() {
-    return weight;
-  }
+    private Foods foodId;         // FK(음식)
+    private Double weight;
+
+    @Builder
+    public DietFoods(DietRecords dietId, Integer orderIndex, Foods foodId, Double weight) {
+        this.dietId = dietId;
+        this.orderIndex = orderIndex;
+        this.foodId = foodId;
+        this.weight = weight;
+    }
 }

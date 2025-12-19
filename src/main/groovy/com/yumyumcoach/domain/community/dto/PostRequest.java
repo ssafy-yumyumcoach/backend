@@ -35,7 +35,7 @@ public class PostRequest {
     private String content;
 
     /**
-     * 이미지 URL 목록
+     * 이미지 objectKey 목록
      */
     private List<String> images;
 }
