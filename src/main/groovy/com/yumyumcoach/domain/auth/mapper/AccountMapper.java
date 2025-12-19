@@ -19,7 +19,7 @@ public interface AccountMapper {
     boolean existsByEmail(@Param("email") String email);
 
     // 닉네임(username) 중복 확인
-    boolean existsByUsername(@Param("email") String username);
+    boolean existsByUsername(@Param("username") String username);
 
     // 신규 계정 저장
     void insertNewAccount(Account account);

@@ -14,6 +14,7 @@ public class DietRecordDto {
     private Long id;
     private LocalDate recordDate;
     private String mealType;
+    private String imageUrl;
     private List<DietFoodDto> items;
 }
 

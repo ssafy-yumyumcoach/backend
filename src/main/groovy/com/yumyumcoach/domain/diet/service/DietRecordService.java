@@ -9,22 +9,16 @@ import java.util.List;
 
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class DietRecordService {
 
     private final DietRecordMapper dietRecordMapper;
     private final DietFoodMapper dietFoodMapper;
-
-    public DietRecordService(
-            DietRecordMapper dietRecordMapper,
-            DietFoodMapper dietFoodMapper
-    ) {
-        this.dietRecordMapper = dietRecordMapper;
-        this.dietFoodMapper = dietFoodMapper;
-    }
 
     @Transactional(readOnly = true)
     public List<DietRecordDto> getMyDiets(String email, LocalDate date, int page, int size) {
@@ -35,7 +29,11 @@ public class DietRecordService {
 
     @Transactional(readOnly = true)
     public DietRecordDto getMyDietDetail(String email, Long dietId) {
-        return dietRecordMapper.selectDietRecordDetail(dietId, email);
+        DietRecordDto dto = dietRecordMapper.selectDietRecordDetail(dietId, email);
+        if (dto == null) {
+            throw new BusinessException(ErrorCode.DIET_NOT_FOUND);
+        }
+        return dto;
     }
 
     @Transactional
@@ -54,7 +52,13 @@ public class DietRecordService {
 
     @Transactional
     public void deleteMyDiet(String email, Long dietId) {
-        // 먼저 자식 삭제
+        String owner = dietRecordMapper.selectOwnerEmail(dietId);
+        if (owner == null) {
+            throw new BusinessException(ErrorCode.DIET_NOT_FOUND);
+        }
+        if (!owner.equals(email)) {
+            throw new BusinessException(ErrorCode.DIET_FORBIDDEN);
+        }
         dietFoodMapper.deleteDietFoodsByDietId(dietId);
         int deleted = dietRecordMapper.deleteDietRecord(dietId, email);
         if (deleted == 0) {
@@ -64,6 +68,13 @@ public class DietRecordService {
 
     @Transactional
     public void updateMyDiet(String email, Long dietId, CreateDietRecordRequest request) {
+        String owner = dietRecordMapper.selectOwnerEmail(dietId);
+        if (owner == null) {
+            throw new BusinessException(ErrorCode.DIET_NOT_FOUND);
+        }
+        if (!owner.equals(email)) {
+            throw new BusinessException(ErrorCode.DIET_FORBIDDEN);
+        }
         int updated = dietRecordMapper.updateDietRecord(dietId, email, request);
         if (updated == 0) {
             throw new BusinessException(ErrorCode.DIET_NOT_FOUND);

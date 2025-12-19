@@ -45,7 +45,6 @@ public interface DietRecordMapper {
             @Param("limit") int limit
     );
 
-    boolean existsById(@Param("id") Long id);
-    boolean existsByIdAndEmail(@Param("id") Long id, @Param("email") String email);
+    String selectOwnerEmail(@Param("id") Long id);
 }
 

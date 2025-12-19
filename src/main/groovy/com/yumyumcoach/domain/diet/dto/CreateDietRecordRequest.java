@@ -15,6 +15,8 @@ import java.util.List;
 @Builder
 public class CreateDietRecordRequest {
 
+    // MyBatis generated keys 채우기용 (keyProperty="id")
+    @Setter
     private Long id; // insert 시 생성된 PK를 MyBatis가 채우기 위함
 
     @NotNull
@@ -27,10 +29,8 @@ public class CreateDietRecordRequest {
     @Valid
     private List<CreateDietFoodRequest> items;
 
-    // MyBatis generated keys 채우기용 (keyProperty="id")
-    public void setId(Long id) {
-        this.id = id;
-    }
+    private String imageUrl; // CloudFront 고정 URL 저장
+
 }
 
 

@@ -6,16 +6,22 @@
 <mapper namespace="com.yumyumcoach.domain.diet.mapper.DietFoodMapper">
 
     <!-- 식단별 음식 리스트 -->
-    <select id="selectDietFoodsByDietId" parameterType="long" resultType="com.yumyumcoach.domain.diet.dto.DietFoodDto">
+    <select id="selectDietFoodsByDietId" resultType="com.yumyumcoach.domain.diet.dto.DietFoodDto">
         SELECT
-            id,
-            diet_id     AS dietId,
-            food_id     AS foodId,
-            serve_count AS serveCount,
-            order_index AS orderIndex
-        FROM diet_foods
-        WHERE diet_id = #{dietId}
-        ORDER BY order_index
+            df.id,
+            df.diet_id     AS dietId,
+            df.food_id     AS foodId,
+            f.name         AS foodName,
+            df.serve_count AS serveCount,
+            df.order_index AS orderIndex,
+            f.calories,
+            f.carbohydrate AS carbs,
+            f.protein,
+            f.fat
+        FROM diet_foods df
+                 LEFT JOIN foods f ON df.food_id = f.id
+        WHERE df.diet_id = #{dietId}
+        ORDER BY df.order_index
     </select>
 
     <!-- 식단별 음식 전체 삭제 -->
