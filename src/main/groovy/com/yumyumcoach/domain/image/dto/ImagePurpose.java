@@ -1,5 +1,5 @@
 package com.yumyumcoach.domain.image.dto;
 
 public enum ImagePurpose {
-    PROFILE, POST, MEAL
+    PROFILE, POST, DIET, CHALLENGE
 }
