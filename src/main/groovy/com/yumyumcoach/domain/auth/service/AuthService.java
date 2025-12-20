@@ -5,6 +5,7 @@ import com.yumyumcoach.domain.auth.entity.Account;
 import com.yumyumcoach.domain.auth.entity.RefreshToken;
 import com.yumyumcoach.domain.auth.mapper.AccountMapper;
 import com.yumyumcoach.domain.auth.mapper.RefreshTokenMapper;
+import com.yumyumcoach.domain.user.mapper.ProfileMapper;
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
 import com.yumyumcoach.global.jwt.JwtTokenProvider;
@@ -22,6 +23,7 @@ import java.util.regex.Pattern;
 public class AuthService {
 
     private final AccountMapper accountMapper;
+    private final ProfileMapper profileMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenMapper refreshTokenMapper;
@@ -105,6 +107,7 @@ public class AuthService {
         }
 
         createAccount(request);
+        profileMapper.insertEmpty(request.getEmail());
         return new SignUpResponse(request.getEmail(), request.getUsername());
     }
 
