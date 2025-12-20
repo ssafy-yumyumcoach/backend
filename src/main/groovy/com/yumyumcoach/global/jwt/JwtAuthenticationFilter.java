@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -33,12 +34,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
+            if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             // 인증이 필요 없는 경로면 그냥 통과(로그인, 회원가입 등)
             String uri = request.getRequestURI();
             if(uri.startsWith("/api/auth/sign-in") || uri.startsWith("/api/auth/sign-up") ||
                 uri.startsWith("/api/auth/check-email") || uri.startsWith("/api/auth/check-username") ||
                 uri.startsWith("/api/auth/refresh")) {
                 filterChain.doFilter(request,response);
+                return;
+            }
+
+            // ✅ 이미 인증이 세팅되어 있으면(JWT든 dev든) 그대로 통과
+            Authentication existing = SecurityContextHolder.getContext().getAuthentication();
+            if (existing != null && existing.isAuthenticated()
+                    && !"anonymousUser".equals(String.valueOf(existing.getPrincipal()))) {
+                filterChain.doFilter(request, response);
                 return;
             }
 
