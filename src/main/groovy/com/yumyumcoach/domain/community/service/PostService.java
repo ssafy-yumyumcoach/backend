@@ -44,7 +44,6 @@ public class PostService {
      * - GET /api/posts
      */
     public GetPostsResponse getPosts(GetPostsRequest request, String loginUserEmail) {
-        // TODO:
         // 1) request.getPage(), request.getSize()를 사용해 페이징 조회
         int page = request.getPage();
         int size = request.getSize();
@@ -86,10 +85,11 @@ public class PostService {
 
                     return PostResponse.builder()
                             .postId(postId)
-                            // User 도메인 연동 전 : 일단 author 관련은 null로 세팅
-                            .authorId(null)
-                            .authorUsername(null)
-                            .authorProfileImageUrl(null)
+                            .authorId(post.getAuthorId())
+                            .authorUsername(post.getAuthorUsername())
+                            .authorProfileImageUrl(
+                                    post.getAuthorProfileImageUrl() == null ? null : cdnUrlResolver.resolve(post.getAuthorProfileImageUrl())
+                            )
                             .title(post.getTitle())
                             .content(post.getContent())
                             .images(imageUrls)
@@ -136,13 +136,16 @@ public class PostService {
         int likeCount = post.getLikes();
 
         // 5) 현재 유저가 좋아요 눌렀는지 여부
-        boolean isLikedByMe = postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
+        boolean isLikedByMe = loginUserEmail != null
+                && postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
 
         return PostResponse.builder()
                 .postId(post.getId())
-                .authorId(null)                 // TODO: User 도메인 연동 후 세팅
-                .authorUsername(null)
-                .authorProfileImageUrl(null)
+                .authorId(post.getAuthorId())
+                .authorUsername(post.getAuthorUsername())
+                .authorProfileImageUrl(
+                        post.getAuthorProfileImageUrl() == null ? null : cdnUrlResolver.resolve(post.getAuthorProfileImageUrl())
+                )
                 .title(post.getTitle())
                 .content(post.getContent())
                 .images(imageUrls)
@@ -185,25 +188,7 @@ public class PostService {
             postImageMapper.insert(postImage);
         }
 
-        // 4) 응답용은 objectKey -> CloudFront URL로 변환
-        List<String> imageCdnUrls = images.stream()
-                .map(cdnUrlResolver::resolve)
-                .toList();
-
-        return PostResponse.builder()
-                .postId(postId)
-                .authorId(null)               // TODO: User 도메인 연동 후 세팅
-                .authorUsername(null)
-                .authorProfileImageUrl(null)
-                .title(post.getTitle())
-                .content(post.getContent())
-                .images(imageCdnUrls)
-                .likeCount(0)
-                .commentCount(0)
-                .isLikedByMe(false)
-                .createdAt(post.getCreatedAt())
-                .updatedAt(null)
-                .build();
+        return getPost(postId, loginUserEmail);
     }
 
     /**
@@ -245,30 +230,7 @@ public class PostService {
             postImageMapper.insert(postImage);
         }
 
-        // 4) 댓글 수, 좋아요 수, isLikedByMe 다시 조회
-        long commentCount = postCommentMapper.countByPostId(postId);
-        int likeCount = existing.getLikes();
-        boolean isLikedByMe = postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
-
-        // 5) 응답용은 objectKey -> CloudFront URL로 변환
-        List<String> imageCdnUrls = images.stream()
-                .map(cdnUrlResolver::resolve)
-                .toList();
-
-        return PostResponse.builder()
-                .postId(postId)
-                .authorId(null)
-                .authorUsername(null)
-                .authorProfileImageUrl(null)
-                .title(request.getTitle())
-                .content(request.getContent())
-                .images(imageCdnUrls)
-                .likeCount(likeCount)
-                .commentCount((int) commentCount)
-                .isLikedByMe(isLikedByMe)
-                .createdAt(existing.getCreatedAt())
-                .updatedAt(null)
-                .build();
+        return getPost(postId, loginUserEmail);
     }
 
     /**

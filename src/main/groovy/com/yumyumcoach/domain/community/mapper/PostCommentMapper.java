@@ -23,5 +23,5 @@ public interface PostCommentMapper {
 
     void deleteByPostId(@Param("postId") Long postId);
 
-    PostComment findByIdAndPostId(Long commentId, Long postId);
+    PostComment findByIdAndPostId(@Param("commentId") Long commentId, @Param("postId") Long postId);
 }
