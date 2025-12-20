@@ -9,16 +9,27 @@
         <id column="id" property="id"/>
         <result column="post_id" property="postId"/>
         <result column="author_email" property="authorEmail"/>
+        <result column="author_id" property="authorId"/>
         <result column="content" property="content"/>
         <result column="created_at" property="createdAt"/>
     </resultMap>
 
     <!-- 특정 게시글의 댓글 목록 -->
     <select id="findByPostId" parameterType="long" resultMap="PostCommentResultMap">
-        SELECT id, post_id, author_email, content, created_at
-        FROM post_comments
-        WHERE post_id = #{postId}
-        ORDER BY created_at ASC
+        SELECT
+        c.id,
+        c.post_id,
+        c.author_email,
+        a.id AS author_id,
+        a.username AS author_username,
+        pr.profile_image_url AS author_profile_image_url,
+        c.content,
+        c.created_at
+        FROM post_comments c
+        JOIN accounts a ON a.email = c.author_email
+        LEFT JOIN profiles pr ON pr.email = c.author_email
+        WHERE c.post_id = #{postId}
+        ORDER BY c.created_at ASC
     </select>
 
     <!-- 댓글 개수 -->
@@ -30,9 +41,19 @@
 
     <!-- 댓글 단건 조회 -->
     <select id="findById" parameterType="long" resultMap="PostCommentResultMap">
-        SELECT id, post_id, author_email, content, created_at
-        FROM post_comments
-        WHERE id = #{commentId}
+        SELECT
+        c.id,
+        c.post_id,
+        c.author_email,
+        a.id AS author_id,
+        a.username AS author_username,
+        pr.profile_image_url AS author_profile_image_url,
+        c.content,
+        c.created_at
+        FROM post_comments c
+        JOIN accounts a ON a.email = c.author_email
+        LEFT JOIN profiles pr ON pr.email = c.author_email
+        WHERE c.id = #{commentId}
     </select>
 
     <!-- 댓글 INSERT -->
@@ -68,11 +89,21 @@
     </delete>
 
     <!-- 특정 게시글에 해당 하는 댓글 단건 조회 -->
-    <select id="findByIdAndPostId" resultType="com.yumyumcoach.domain.community.entity.PostComment">
-        SELECT *
-        FROM post_comments
-        WHERE id = #{commentId}
-          AND post_id = #{postId}
+    <select id="findByIdAndPostId" resultMap="PostCommentResultMap">
+        SELECT
+        c.id,
+        c.post_id,
+        c.author_email,
+        a.id AS author_id,
+        a.username AS author_username,
+        pr.profile_image_url AS author_profile_image_url,
+        c.content,
+        c.created_at
+        FROM post_comments c
+        JOIN accounts a ON a.email = c.author_email
+        LEFT JOIN profiles pr ON pr.email = c.author_email
+        WHERE c.id = #{commentId}
+        AND c.post_id = #{postId}
     </select>
 
 </mapper>

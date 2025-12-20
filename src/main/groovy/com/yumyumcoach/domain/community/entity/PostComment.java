@@ -14,7 +14,10 @@ import java.time.LocalDateTime;
 public class PostComment {
     private Long id;            // PK
     private Long postId;        // FK(posts.id)
+    private Long authorId;
     private String authorEmail; // FK(accounts.email)
+    private String authorUsername;
+    private String authorProfileImageUrl;
     private String content;
     private LocalDateTime createdAt;
 

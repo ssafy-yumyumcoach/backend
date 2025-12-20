@@ -8,6 +8,7 @@ import com.yumyumcoach.domain.community.entity.Post;
 import com.yumyumcoach.domain.community.entity.PostComment;
 import com.yumyumcoach.domain.community.mapper.PostCommentMapper;
 import com.yumyumcoach.domain.community.mapper.PostMapper;
+import com.yumyumcoach.global.common.CdnUrlResolver;
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import java.util.List;
 public class CommentService {
     private final PostMapper postMapper;
     private final PostCommentMapper postCommentMapper;
+    private final CdnUrlResolver cdnUrlResolver;
 
     /**
      * 특정 게시글의 댓글 목록 조회
@@ -49,9 +51,11 @@ public class CommentService {
                         .commentId(comment.getId())
                         .postId(comment.getPostId())
                         // User 도메인 연동 전 : 일단 author 관련은 null로 세팅
-                        .authorId(null)
-                        .authorUsername(null)
-                        .authorProfileImageUrl(null)
+                        .authorId(comment.getAuthorId())
+                        .authorUsername(comment.getAuthorUsername())
+                        .authorProfileImageUrl(
+                                comment.getAuthorProfileImageUrl() == null ? null : cdnUrlResolver.resolve(comment.getAuthorProfileImageUrl())
+                        )
                         .content(comment.getContent())
                         .createdAt(comment.getCreatedAt())
                         .build()
@@ -89,14 +93,18 @@ public class CommentService {
         // 3) DB 저장 (id 자동 증가)
         postCommentMapper.insert(comment); // useGeneratedKeys=true 로 인해 comment.id 세팅됨
 
+        PostComment saved = postCommentMapper.findByIdAndPostId(comment.getId(), postId);
+
         return CommentResponse.builder()
-                .commentId(comment.getId())
+                .commentId(saved.getId())
                 .postId(postId)
-                .authorId(null)   // TODO: User 도메인 연동 후 세팅
-                .authorUsername(null)
-                .authorProfileImageUrl(null)
-                .content(comment.getContent())
-                .createdAt(comment.getCreatedAt())
+                .authorId(saved.getAuthorId())
+                .authorUsername(saved.getAuthorUsername())
+                .authorProfileImageUrl(
+                        saved.getAuthorProfileImageUrl() == null ? null : cdnUrlResolver.resolve(saved.getAuthorProfileImageUrl())
+                )
+                .content(saved.getContent())
+                .createdAt(saved.getCreatedAt())
                 .build();
     }
 
@@ -124,14 +132,18 @@ public class CommentService {
                 .content(request.getContent())
                 .build());
 
+        PostComment updated = postCommentMapper.findByIdAndPostId(commentId, postId);
+
         return CommentResponse.builder()
                 .commentId(commentId)
                 .postId(postId)
-                .authorId(null)
-                .authorUsername(null)
-                .authorProfileImageUrl(null)
-                .content(request.getContent())
-                .createdAt(existing.getCreatedAt())
+                .authorId(updated.getAuthorId())
+                .authorUsername(updated.getAuthorUsername())
+                .authorProfileImageUrl(
+                        updated.getAuthorProfileImageUrl() == null ? null : cdnUrlResolver.resolve(updated.getAuthorProfileImageUrl())
+                )
+                .content(updated.getContent())
+                .createdAt(updated.getCreatedAt())
                 .build();
     }
 

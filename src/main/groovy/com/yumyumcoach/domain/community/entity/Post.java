@@ -18,7 +18,10 @@ public class Post {
 //    private String category;
     private LocalDateTime createdAt;
     private int likes;
+    private Long authorId;
     private String authorEmail;
+    private String authorUsername;
+    private String authorProfileImageUrl;
 
     // 나중에 category 추가시 주석 풀기
 //    public void update(String title, String content, String category) {
