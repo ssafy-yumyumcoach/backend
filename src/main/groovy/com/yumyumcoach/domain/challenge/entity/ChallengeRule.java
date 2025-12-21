@@ -1,5 +1,6 @@
 package com.yumyumcoach.domain.challenge.entity;
 
+import com.yumyumcoach.domain.title.entity.Title;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,4 +34,9 @@ public class ChallengeRule {
      * - EXERCISE_MINUTES_PER_DAY: 분
      */
     private Double dailyTargetValue;
+
+    /**
+     * 난이도별 보상 타이틀 id
+     */
+    private Long rewardTitleId;
 }

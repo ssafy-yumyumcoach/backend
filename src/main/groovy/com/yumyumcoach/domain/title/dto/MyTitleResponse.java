@@ -1,4 +1,4 @@
-package com.yumyumcoach.domain.user.dto;
+package com.yumyumcoach.domain.title.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,5 +17,6 @@ public class MyTitleResponse {
 
     private Long currentTitleId;     // profiles.display_title_id
     private String currentTitleName; // titles.name
+    private String currentTitleEmoji;
 }
 

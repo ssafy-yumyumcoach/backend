@@ -2,14 +2,15 @@ package com.yumyumcoach.domain.user.service;
 
 import com.yumyumcoach.domain.auth.entity.Account;
 import com.yumyumcoach.domain.auth.mapper.AccountMapper;
-import com.yumyumcoach.domain.user.dto.MyTitleResponse;
+import com.yumyumcoach.domain.title.dto.MyTitleItemResponse;
+import com.yumyumcoach.domain.title.dto.MyTitleResponse;
 import com.yumyumcoach.domain.user.dto.MyPageResponse;
 import com.yumyumcoach.domain.user.dto.UpdateMyBasicInfoRequest;
 import com.yumyumcoach.domain.user.dto.UpdateMyHealthInfoRequest;
 import com.yumyumcoach.domain.user.entity.Profile;
 import com.yumyumcoach.domain.user.mapper.FollowMapper;
 import com.yumyumcoach.domain.user.mapper.ProfileMapper;
-import com.yumyumcoach.domain.user.mapper.UserTitleMapper;
+import com.yumyumcoach.domain.title.mapper.TitleMapper;
 import com.yumyumcoach.global.common.CdnUrlResolver;
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
@@ -26,7 +27,7 @@ public class UserService {
     private final AccountMapper accountMapper;
     private final ProfileMapper profileMapper;
     private final FollowMapper followMapper;
-    private final UserTitleMapper userTitleMapper;
+    private final TitleMapper titleMapper;
     private final CdnUrlResolver cdnUrlResolver;
 
     public MyPageResponse getMyPage(String email) {
@@ -45,8 +46,16 @@ public class UserService {
         long followers = followMapper.countFollowers(email);
         long followings = followMapper.countFollowings(email);
 
-        MyTitleResponse current = userTitleMapper.findCurrentTitle(email);
-        List<MyPageResponse.TitleItem> myTitles = userTitleMapper.findMyTitles(email);
+        MyTitleResponse current = titleMapper.findCurrentTitle(email);
+        List<MyTitleItemResponse> myTitleDtos = titleMapper.findMyTitles(email);
+
+        List<MyPageResponse.TitleItem> myTitles = myTitleDtos.stream()
+                .map(t -> MyPageResponse.TitleItem.builder()
+                        .titleId(t.getTitleId())
+                        .name(t.getName())
+                        .description(t.getDescription())
+                        .build())
+                .toList();
 
         return MyPageResponse.builder()
                 .basic(MyPageResponse.Basic.builder()
@@ -161,7 +170,7 @@ public class UserService {
     @Transactional
     public MyTitleResponse selectMyTitle(String email, Long titleId) {
 
-        if (!userTitleMapper.ownsTitle(email, titleId)) {
+        if (!titleMapper.ownsTitle(email, titleId)) {
             throw new BusinessException(ErrorCode.USER_TITLE_NOT_FOUND);
         }
 
@@ -170,6 +179,6 @@ public class UserService {
             throw new BusinessException(ErrorCode.PROFILE_NOT_FOUND);
         }
 
-        return userTitleMapper.findCurrentTitle(email);
+        return titleMapper.findCurrentTitle(email);
     }
 }

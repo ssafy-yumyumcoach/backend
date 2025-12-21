@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * 공용 챌린지 응답 DTO.
  * - 목록 카드
@@ -123,6 +125,11 @@ public class ChallengeResponse {
      * 참여하지 않은 경우 null
      */
     private Double progressPercentage;
+
+    /**
+     * 난이도별 칭호 (초급/중급/고급)
+     */
+    private List<RewardTitleResponse> rewardTitles;
 }
 
 

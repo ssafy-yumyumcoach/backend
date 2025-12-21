@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.yumyumcoach.domain.user.mapper.UserTitleMapper">
+<mapper namespace="com.yumyumcoach.domain.title.mapper.TitleMapper">
 
     <!-- 내가 보유한 타이틀인지 여부 -->
     <select id="ownsTitle" resultType="boolean">
@@ -16,7 +16,7 @@
     </select>
 
     <!-- 현재 대표 타이틀 조회 -->
-    <select id="findCurrentTitle" resultType="com.yumyumcoach.domain.user.dto.MyTitleResponse">
+    <select id="findCurrentTitle" resultType="com.yumyumcoach.domain.title.dto.MyTitleResponse">
         SELECT
             p.display_title_id AS currentTitleId,
             t.name AS currentTitleName
@@ -28,14 +28,22 @@
 
     <!-- 내가 보유한 타이틀 목록 -->
     <!-- MyPageResponse 내부 static class는 '$'로 참조 -->
-    <select id="findMyTitles" resultType="com.yumyumcoach.domain.user.dto.MyPageResponse$TitleItem">
+    <select id="findMyTitles" resultType="com.yumyumcoach.domain.title.dto.MyTitleItemResponse">
         SELECT
-            t.id AS titleId,
-            t.name AS name,
-            t.description AS description
+        t.id            AS titleId,
+        t.icon_emoji    AS iconEmoji,
+        t.name          AS name,
+        t.description   AS description,
+        at.obtained_at  AS obtainedAt,
+        at.source_challenge_id AS sourceChallengeId,
+        cd.name         AS difficultyName
         FROM account_titles at
-        JOIN titles t
-        ON t.id = at.title_id
+        JOIN titles t ON t.id = at.title_id
+        LEFT JOIN challenge_rules cr
+        ON cr.challenge_id = at.source_challenge_id
+        AND cr.reward_title_id = at.title_id        <!-- ★ reward_title_id 컬럼 있어야 함 -->
+        LEFT JOIN challenge_difficulties cd
+        ON cd.code = cr.difficulty_code
         WHERE at.email = #{email}
         ORDER BY at.obtained_at DESC
     </select>

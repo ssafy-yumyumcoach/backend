@@ -1,6 +1,7 @@
-package com.yumyumcoach.domain.user.mapper;
+package com.yumyumcoach.domain.title.mapper;
 
-import com.yumyumcoach.domain.user.dto.MyTitleResponse;
+import com.yumyumcoach.domain.title.dto.MyTitleItemResponse;
+import com.yumyumcoach.domain.title.dto.MyTitleResponse;
 import com.yumyumcoach.domain.user.dto.MyPageResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -8,7 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 @Mapper
-public interface UserTitleMapper {
+public interface TitleMapper {
 
     /**
      * 내가 보유한 타이틀인지 여부
@@ -27,6 +28,6 @@ public interface UserTitleMapper {
      * 내가 보유한 타이틀 목록 조회
      * - account_titles + titles 조인
      */
-    List<MyPageResponse.TitleItem> findMyTitles(@Param("email") String email);
+    List<MyTitleItemResponse> findMyTitles(@Param("email") String email);
 }
 
