@@ -61,6 +61,7 @@ public interface ChallengeParticipantMapper {
      *
      * @param challengeId        챌린지 ID
      * @param email              사용자 이메일
+     * @param successDays        성공 일수
      * @param progressPercentage 진행률(0.0 ~ 100.0)
      * @param evaluatedAt        평가 시각
      * @return 업데이트된 row 수
@@ -68,6 +69,7 @@ public interface ChallengeParticipantMapper {
     int updateProgress(
             @Param("challengeId") Long challengeId,
             @Param("email") String email,
+            @Param("successDays") Integer successDays,
             @Param("progressPercentage") Double progressPercentage,
             @Param("evaluatedAt") LocalDateTime evaluatedAt
     );

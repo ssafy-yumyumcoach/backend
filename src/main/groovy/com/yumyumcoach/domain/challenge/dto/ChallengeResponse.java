@@ -80,6 +80,18 @@ public class ChallengeResponse {
     private String endDate;
 
     /**
+     * 챌린지 모집 시작일 (yyyy-MM-dd)
+     * 예) 2025-10-01
+     */
+    private String recruitStartDate;
+
+    /**
+     * 챌린지 모집 종료일 (yyyy-MM-dd)
+     * 예) 2025-10-30
+     */
+    private String recruitEndDate;
+
+    /**
      * 현재 챌린지에 참여 중인 인원 수
      */
     private Integer participantsCount;
@@ -129,7 +141,7 @@ public class ChallengeResponse {
     /**
      * 난이도별 칭호 (초급/중급/고급)
      */
-    private List<RewardTitleResponse> rewardTitles;
+    private List<ChallengeDifficultyOptionResponse> difficultyOptions;
 }
 
 
