@@ -12,6 +12,7 @@ import com.yumyumcoach.domain.user.mapper.FollowMapper;
 import com.yumyumcoach.domain.user.mapper.ProfileMapper;
 import com.yumyumcoach.domain.title.mapper.TitleMapper;
 import com.yumyumcoach.global.common.CdnUrlResolver;
+import com.yumyumcoach.global.common.CredentialValidator;
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -101,26 +102,47 @@ public class UserService {
             throw new BusinessException(ErrorCode.PROFILE_NOT_FOUND);
         }
 
-        // TODO: 닉네임 업데이트 로직 구현하기
-
-        Profile patch = Profile.builder()
-                .email(email)
-                .profileImageUrl(req.getProfileImageUrl())
-                .introduction(req.getIntroduction())
-                .build();
-
-        profileMapper.updateBasic(patch);
-
-        Profile updated = profileMapper.findByEmail(email);
-        Long userId = accountMapper.findIdByEmail(email);
         Account account = accountMapper.findByEmail(email);
+        if (account == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        if (req.getUsername() != null) {
+            String newUsername = req.getUsername().trim();
+            CredentialValidator.validateUsername(newUsername);
+            if (newUsername.isBlank()) {
+                throw new BusinessException(ErrorCode.AUTH_INVALID_USERNAME_FORMAT);
+            }
+
+            if (accountMapper.existsByUsername(newUsername)) {
+                throw new BusinessException(ErrorCode.AUTH_USERNAME_ALREADY_EXISTS);
+            }
+
+            accountMapper.updateUsername(email, newUsername);
+        }
+
+        boolean needProfileUpdate =
+                req.getProfileImageUrl() != null || req.getIntroduction() != null;
+
+        if (needProfileUpdate) {
+            Profile patch = Profile.builder()
+                    .email(email)
+                    .profileImageUrl(req.getProfileImageUrl())
+                    .introduction(req.getIntroduction())
+                    .build();
+            profileMapper.updateBasic(patch);
+        }
+
+        Profile updatedProfile = profileMapper.findByEmail(email);
+        Long userId = accountMapper.findIdByEmail(email);
+        Account updatedAccount = accountMapper.findByEmail(email);
 
         return MyPageResponse.Basic.builder()
                 .userId(userId)
                 .email(email)
-                .username(account.getUsername())
-                .profileImageUrl(cdnUrlResolver.resolve(updated.getProfileImageUrl()))
-                .introduction(updated.getIntroduction())
+                .username(updatedAccount.getUsername())
+                .profileImageUrl(cdnUrlResolver.resolve(updatedProfile.getProfileImageUrl()))
+                .introduction(updatedProfile.getIntroduction())
                 .build();
     }
 
