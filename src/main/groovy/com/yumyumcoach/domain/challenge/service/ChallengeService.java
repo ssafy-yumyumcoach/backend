@@ -5,8 +5,10 @@ import com.yumyumcoach.domain.challenge.entity.Challenge;
 import com.yumyumcoach.domain.challenge.entity.ChallengeParticipant;
 import com.yumyumcoach.domain.challenge.mapper.ChallengeMapper;
 import com.yumyumcoach.domain.challenge.mapper.ChallengeParticipantMapper;
+import com.yumyumcoach.domain.challenge.mapper.ChallengeRuleMapper;
 import com.yumyumcoach.domain.challenge.model.DifficultyCode;
 import com.yumyumcoach.domain.challenge.model.GoalType;
+import com.yumyumcoach.global.common.CdnUrlResolver;
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,8 @@ public class ChallengeService {
     private final ChallengeMapper challengeMapper;
     private final ChallengeParticipantMapper challengeParticipantMapper;
     private final ChallengeRuleResolver challengeRuleResolver;
+    private final ChallengeRuleMapper challengeRuleMapper;
+    private final CdnUrlResolver cdnUrlResolver;
 
     /**
      * 특정 월 기준 챌린지 목록을 조회한다.
@@ -182,6 +186,9 @@ public class ChallengeService {
 
         int participantsCount = challengeParticipantMapper.countByChallengeId(challenge.getId());
 
+        List<RewardTitleResponse> rewardTitles =
+                challengeRuleMapper.findRewardTitlesByChallengeId(challenge.getId());
+
         Integer successDays = null;
         Double progressPercentage = null;
         String selectedDifficulty = null;
@@ -204,7 +211,7 @@ public class ChallengeService {
                 .shortDescription(challenge.getShortDescription())
                 .goalSummary(challenge.getGoalSummary())
                 .ruleDescription(null) // 목록에서는 유의 사항은 내려주지 않음
-                .imageUrl(challenge.getImageUrl())
+                .imageUrl(cdnUrlResolver.resolve(challenge.getImageUrl()))
                 .type(challenge.getChallengeType())
                 .goalType(challenge.getGoalType())
                 .startDate(challenge.getStartDate().toString())
@@ -216,6 +223,7 @@ public class ChallengeService {
                 .dailyTargetValue(dailyTargetValue)
                 .successDays(successDays)
                 .progressPercentage(progressPercentage)
+                .rewardTitles(rewardTitles)
                 .build();
     }
 
@@ -249,7 +257,7 @@ public class ChallengeService {
                 .shortDescription(challenge.getShortDescription())
                 .goalSummary(challenge.getGoalSummary())
                 .ruleDescription(challenge.getRuleDescription())
-                .imageUrl(challenge.getImageUrl())
+                .imageUrl(cdnUrlResolver.resolve(challenge.getImageUrl()))
                 .type(challenge.getChallengeType())
                 .goalType(challenge.getGoalType())
                 .startDate(challenge.getStartDate().toString())

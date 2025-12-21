@@ -6,6 +6,7 @@ import com.yumyumcoach.domain.auth.entity.RefreshToken;
 import com.yumyumcoach.domain.auth.mapper.AccountMapper;
 import com.yumyumcoach.domain.auth.mapper.RefreshTokenMapper;
 import com.yumyumcoach.domain.user.mapper.ProfileMapper;
+import com.yumyumcoach.global.common.CredentialValidator;
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
 import com.yumyumcoach.global.jwt.JwtTokenProvider;
@@ -27,22 +28,19 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenMapper refreshTokenMapper;
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
-    private static final Pattern USERNAME_PATTERN =
-            Pattern.compile("^[가-힣a-zA-Z0-9._]{2,12}$");
+
 
     //이메일 중복확인
     @Transactional(readOnly = true)
     public boolean isEmailAvailable(String email) {
-        validateEmail(email);
+        CredentialValidator.validateEmail(email);
         return !accountMapper.existsByEmail(email);
     }
 
     //닉네임(username) 중복 확인
     @Transactional(readOnly = true)
     public boolean isUsernameAvailable(String username) {
-        validateUsername(username);
+        CredentialValidator.validateUsername(username);
         return !accountMapper.existsByUsername(username);
     }
 
@@ -96,8 +94,8 @@ public class AuthService {
     // 회원가입: 이메일/닉네임 형식 및 중복 확인 후 계정 저장
     @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
-        validateEmail(request.getEmail());
-        validateUsername(request.getUsername());
+        CredentialValidator.validateEmail(request.getEmail());
+        CredentialValidator.validateUsername(request.getUsername());
 
         if (accountMapper.existsByEmail(request.getEmail())) {
             throw new BusinessException(ErrorCode.AUTH_EMAIL_ALREADY_EXISTS);
@@ -172,18 +170,6 @@ public class AuthService {
                 jwtTokenProvider.getAccessTokenExpirationSeconds(),
                 jwtTokenProvider.getRefreshTokenExpirationSeconds()
         );
-    }
-
-    private static void validateEmail(String email) {
-        if (email == null || email.isBlank() || !EMAIL_PATTERN.matcher(email).matches()) {
-            throw new BusinessException(ErrorCode.AUTH_INVALID_EMAIL_FORMAT);
-        }
-    }
-
-    private static void validateUsername(String username) {
-        if (username == null || username.isBlank() || !USERNAME_PATTERN.matcher(username).matches()) {
-            throw new BusinessException(ErrorCode.AUTH_INVALID_USERNAME_FORMAT);
-        }
     }
 
     private void createAccount(SignUpRequest request) {

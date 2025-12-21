@@ -1,8 +1,11 @@
 package com.yumyumcoach.domain.challenge.mapper;
 
+import com.yumyumcoach.domain.challenge.dto.RewardTitleResponse;
 import com.yumyumcoach.domain.challenge.entity.ChallengeRule;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 @Mapper
 public interface ChallengeRuleMapper {
@@ -17,5 +20,10 @@ public interface ChallengeRuleMapper {
             @Param("challengeId") Long challengeId,
             @Param("difficultyCode") String difficultyCode
     );
+
+    /**
+     * 챌린지 1개에 대한 난이도별 보상 3개를 조회한다.
+     */
+    List<RewardTitleResponse> findRewardTitlesByChallengeId(@Param("challengeId") Long challengeId);
 }
 

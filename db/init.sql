@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS titles (
 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 name VARCHAR(255) NOT NULL,
 description VARCHAR(255) DEFAULT NULL,
+icon_emoji VARCHAR(32) DEFAULT NULL,
 PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -222,11 +223,14 @@ challenge_id BIGINT UNSIGNED NOT NULL,
 difficulty_code VARCHAR(255) NOT NULL,
 required_success_days INT NOT NULL,
 daily_target_value DOUBLE DEFAULT NULL,
+reward_title_id BIGINT UNSIGNED DEFAULT NULL,
 PRIMARY KEY (challenge_id, difficulty_code),
 CONSTRAINT fk_challenge_rules_challenge
 FOREIGN KEY (challenge_id) REFERENCES challenges(id),
 CONSTRAINT fk_challenge_rules_difficulty
 FOREIGN KEY (difficulty_code) REFERENCES challenge_difficulties(code)
+CONSTRAINT fk_challenge_rules_reward_title
+FOREIGN KEY (reward_title_id) REFERENCES titles(id);
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 17) challenge_participants (최종: difficulty/required/daily + success_days)

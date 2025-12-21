@@ -2,15 +2,17 @@ package com.yumyumcoach.domain.user.service;
 
 import com.yumyumcoach.domain.auth.entity.Account;
 import com.yumyumcoach.domain.auth.mapper.AccountMapper;
-import com.yumyumcoach.domain.user.dto.MyTitleResponse;
+import com.yumyumcoach.domain.title.dto.MyTitleItemResponse;
+import com.yumyumcoach.domain.title.dto.MyTitleResponse;
 import com.yumyumcoach.domain.user.dto.MyPageResponse;
 import com.yumyumcoach.domain.user.dto.UpdateMyBasicInfoRequest;
 import com.yumyumcoach.domain.user.dto.UpdateMyHealthInfoRequest;
 import com.yumyumcoach.domain.user.entity.Profile;
 import com.yumyumcoach.domain.user.mapper.FollowMapper;
 import com.yumyumcoach.domain.user.mapper.ProfileMapper;
-import com.yumyumcoach.domain.user.mapper.UserTitleMapper;
+import com.yumyumcoach.domain.title.mapper.TitleMapper;
 import com.yumyumcoach.global.common.CdnUrlResolver;
+import com.yumyumcoach.global.common.CredentialValidator;
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +28,7 @@ public class UserService {
     private final AccountMapper accountMapper;
     private final ProfileMapper profileMapper;
     private final FollowMapper followMapper;
-    private final UserTitleMapper userTitleMapper;
+    private final TitleMapper titleMapper;
     private final CdnUrlResolver cdnUrlResolver;
 
     public MyPageResponse getMyPage(String email) {
@@ -45,8 +47,16 @@ public class UserService {
         long followers = followMapper.countFollowers(email);
         long followings = followMapper.countFollowings(email);
 
-        MyTitleResponse current = userTitleMapper.findCurrentTitle(email);
-        List<MyPageResponse.TitleItem> myTitles = userTitleMapper.findMyTitles(email);
+        MyTitleResponse current = titleMapper.findCurrentTitle(email);
+        List<MyTitleItemResponse> myTitleDtos = titleMapper.findMyTitles(email);
+
+        List<MyPageResponse.TitleItem> myTitles = myTitleDtos.stream()
+                .map(t -> MyPageResponse.TitleItem.builder()
+                        .titleId(t.getTitleId())
+                        .name(t.getName())
+                        .description(t.getDescription())
+                        .build())
+                .toList();
 
         return MyPageResponse.builder()
                 .basic(MyPageResponse.Basic.builder()
@@ -92,26 +102,47 @@ public class UserService {
             throw new BusinessException(ErrorCode.PROFILE_NOT_FOUND);
         }
 
-        // TODO: 닉네임 업데이트 로직 구현하기
-
-        Profile patch = Profile.builder()
-                .email(email)
-                .profileImageUrl(req.getProfileImageUrl())
-                .introduction(req.getIntroduction())
-                .build();
-
-        profileMapper.updateBasic(patch);
-
-        Profile updated = profileMapper.findByEmail(email);
-        Long userId = accountMapper.findIdByEmail(email);
         Account account = accountMapper.findByEmail(email);
+        if (account == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        if (req.getUsername() != null) {
+            String newUsername = req.getUsername().trim();
+            CredentialValidator.validateUsername(newUsername);
+            if (newUsername.isBlank()) {
+                throw new BusinessException(ErrorCode.AUTH_INVALID_USERNAME_FORMAT);
+            }
+
+            if (accountMapper.existsByUsername(newUsername)) {
+                throw new BusinessException(ErrorCode.AUTH_USERNAME_ALREADY_EXISTS);
+            }
+
+            accountMapper.updateUsername(email, newUsername);
+        }
+
+        boolean needProfileUpdate =
+                req.getProfileImageUrl() != null || req.getIntroduction() != null;
+
+        if (needProfileUpdate) {
+            Profile patch = Profile.builder()
+                    .email(email)
+                    .profileImageUrl(req.getProfileImageUrl())
+                    .introduction(req.getIntroduction())
+                    .build();
+            profileMapper.updateBasic(patch);
+        }
+
+        Profile updatedProfile = profileMapper.findByEmail(email);
+        Long userId = accountMapper.findIdByEmail(email);
+        Account updatedAccount = accountMapper.findByEmail(email);
 
         return MyPageResponse.Basic.builder()
                 .userId(userId)
                 .email(email)
-                .username(account.getUsername())
-                .profileImageUrl(cdnUrlResolver.resolve(updated.getProfileImageUrl()))
-                .introduction(updated.getIntroduction())
+                .username(updatedAccount.getUsername())
+                .profileImageUrl(cdnUrlResolver.resolve(updatedProfile.getProfileImageUrl()))
+                .introduction(updatedProfile.getIntroduction())
                 .build();
     }
 
@@ -161,7 +192,7 @@ public class UserService {
     @Transactional
     public MyTitleResponse selectMyTitle(String email, Long titleId) {
 
-        if (!userTitleMapper.ownsTitle(email, titleId)) {
+        if (!titleMapper.ownsTitle(email, titleId)) {
             throw new BusinessException(ErrorCode.USER_TITLE_NOT_FOUND);
         }
 
@@ -170,6 +201,6 @@ public class UserService {
             throw new BusinessException(ErrorCode.PROFILE_NOT_FOUND);
         }
 
-        return userTitleMapper.findCurrentTitle(email);
+        return titleMapper.findCurrentTitle(email);
     }
 }

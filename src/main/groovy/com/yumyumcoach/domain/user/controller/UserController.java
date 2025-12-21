@@ -1,13 +1,12 @@
 package com.yumyumcoach.domain.user.controller;
 
 import com.yumyumcoach.domain.user.dto.MyPageResponse;
-import com.yumyumcoach.domain.user.dto.MyTitleResponse;
+import com.yumyumcoach.domain.title.dto.MyTitleResponse;
 import com.yumyumcoach.domain.user.dto.UpdateMyBasicInfoRequest;
 import com.yumyumcoach.domain.user.dto.UpdateMyHealthInfoRequest;
 import com.yumyumcoach.domain.user.service.UserService;
 import com.yumyumcoach.global.common.CurrentUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

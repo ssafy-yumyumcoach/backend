@@ -1,4 +1,4 @@
-package com.yumyumcoach.domain.user.entity;
+package com.yumyumcoach.domain.title.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,4 +28,9 @@ public class Title {
      * 타이틀 설명
      */
     private String description;
+
+    /**
+     * 타이틀 이모지
+     */
+    private String iconEmoji;
 }

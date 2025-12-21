@@ -42,4 +42,10 @@
         FROM accounts
         WHERE email = #{email}
     </select>
+
+    <update id="updateUsername">
+        UPDATE accounts
+        SET username = #{username}
+        WHERE email = #{email}
+    </update>
 </mapper>
