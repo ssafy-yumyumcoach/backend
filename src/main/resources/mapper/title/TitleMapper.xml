@@ -27,23 +27,26 @@
     </select>
 
     <!-- 내가 보유한 타이틀 목록 -->
-    <!-- MyPageResponse 내부 static class는 '$'로 참조 -->
-    <select id="findMyTitles" resultType="com.yumyumcoach.domain.title.dto.MyTitleItemResponse">
+    <select id="findMyTitles" parameterType="string"
+            resultType="com.yumyumcoach.domain.title.dto.MyTitleItemResponse">
         SELECT
-        t.id            AS titleId,
-        t.icon_emoji    AS iconEmoji,
-        t.name          AS name,
-        t.description   AS description,
-        at.obtained_at  AS obtainedAt,
-        at.source_challenge_id AS sourceChallengeId,
-        cd.name         AS difficultyName
+            t.id AS titleId,
+            t.icon_emoji AS iconEmoji,
+            t.name AS name,
+            t.description AS description,
+            at.obtained_at AS obtainedAt,
+            at.source_challenge_id AS sourceChallengeId,
+            CASE cr.difficulty_code
+                WHEN 'BEGINNER' THEN '초급'
+                WHEN 'INTERMEDIATE' THEN '중급'
+                WHEN 'ADVANCED' THEN '고급'
+                ELSE NULL
+                END AS difficultyName
         FROM account_titles at
-        JOIN titles t ON t.id = at.title_id
-        LEFT JOIN challenge_rules cr
-        ON cr.challenge_id = at.source_challenge_id
-        AND cr.reward_title_id = at.title_id        <!-- ★ reward_title_id 컬럼 있어야 함 -->
-        LEFT JOIN challenge_difficulties cd
-        ON cd.code = cr.difficulty_code
+    JOIN titles t ON t.id = at.title_id
+            LEFT JOIN challenge_rules cr
+            ON cr.challenge_id = at.source_challenge_id
+            AND cr.reward_title_id = at.title_id
         WHERE at.email = #{email}
         ORDER BY at.obtained_at DESC
     </select>
