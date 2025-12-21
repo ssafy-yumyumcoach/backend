@@ -7,6 +7,7 @@ import com.yumyumcoach.domain.title.dto.MyTitleResponse;
 import com.yumyumcoach.domain.user.dto.MyPageResponse;
 import com.yumyumcoach.domain.user.dto.UpdateMyBasicInfoRequest;
 import com.yumyumcoach.domain.user.dto.UpdateMyHealthInfoRequest;
+import com.yumyumcoach.domain.user.dto.UserProfileResponse;
 import com.yumyumcoach.domain.user.entity.Profile;
 import com.yumyumcoach.domain.user.mapper.FollowMapper;
 import com.yumyumcoach.domain.user.mapper.ProfileMapper;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -216,5 +218,59 @@ public class UserService {
         }
 
         return titleMapper.findCurrentTitle(email);
+    }
+
+    public UserProfileResponse getUserProfile(String viewerEmail, Long userId) {
+
+        // 1) userId -> targetEmail
+        String targetEmail = accountMapper.findEmailById(userId);
+        if (targetEmail == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 2) 계정 / 프로필 조회
+        Account targetAccount = accountMapper.findByEmail(targetEmail);
+        if (targetAccount == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        Profile targetProfile = profileMapper.findByEmail(targetEmail);
+        if (targetProfile == null) {
+            throw new BusinessException(ErrorCode.PROFILE_NOT_FOUND);
+        }
+
+        // 3) 팔로우 요약 + isFollowing
+        long followers = followMapper.countFollowers(targetEmail);
+        long followings = followMapper.countFollowings(targetEmail);
+
+        boolean isFollowing = false;
+        if (viewerEmail != null && !viewerEmail.equals(targetEmail)) {
+            isFollowing = followMapper.exists(viewerEmail, targetEmail);
+        }
+
+        // 4) 대표 타이틀(없을 수 있음) + 보유 타이틀 목록
+        MyTitleResponse current = titleMapper.findCurrentTitle(targetEmail); // null 가능
+        List<MyTitleItemResponse> titles = titleMapper.findMyTitles(targetEmail);
+
+        // 5) 응답 조립 (email 없이)
+        return UserProfileResponse.builder()
+                .basic(UserProfileResponse.Basic.builder()
+                        .userId(userId)
+                        .username(targetAccount.getUsername())
+                        .profileImageUrl(cdnUrlResolver.resolve(targetProfile.getProfileImageUrl()))
+                        .introduction(targetProfile.getIntroduction())
+                        .build())
+                .follow(UserProfileResponse.Follow.builder()
+                        .followersCount(followers)
+                        .followingsCount(followings)
+                        .isFollowing(isFollowing)
+                        .build())
+                .badges(UserProfileResponse.Badges.builder()
+                        .currentTitleId(current != null ? current.getCurrentTitleId() : null)
+                        .currentTitleName(current != null ? current.getCurrentTitleName() : null)
+                        .currentIconEmoji(current != null ? current.getCurrentTitleEmoji() : null)
+                        .titles(titles)
+                        .build())
+                .build();
     }
 }

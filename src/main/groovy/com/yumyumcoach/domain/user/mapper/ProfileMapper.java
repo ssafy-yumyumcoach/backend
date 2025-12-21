@@ -1,5 +1,6 @@
 package com.yumyumcoach.domain.user.mapper;
 
+import com.yumyumcoach.domain.user.dto.UserProfileRow;
 import com.yumyumcoach.domain.user.entity.Profile;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -37,5 +38,10 @@ public interface ProfileMapper {
      */
     int updateDisplayTitle(@Param("email") String email,
                            @Param("displayTitleId") Long displayTitleId);
+
+    /**
+     * 상대방 프로필 조회
+     */
+    UserProfileRow findUserProfileRow(@Param("userId") Long userId);
 }
 
