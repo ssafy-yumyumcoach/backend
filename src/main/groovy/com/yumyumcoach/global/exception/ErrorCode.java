@@ -15,6 +15,7 @@ public enum ErrorCode {
     // ===== AUTH =====
     AUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "액세스 토큰이 유효하지 않습니다."),
     AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."),
+    AUTH_LOGIN_NOT_ALLOWED(HttpStatus.FORBIDDEN, "로그인할 수 없는 계정입니다."),
     AUTH_REFRESH_TOKEN_REQUIRED(HttpStatus.BAD_REQUEST, "refresh token 이 없습니다."),
     AUTH_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 refresh token 입니다."),
     AUTH_INVALID_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, "올바른 이메일 형식이 아닙니다."),
