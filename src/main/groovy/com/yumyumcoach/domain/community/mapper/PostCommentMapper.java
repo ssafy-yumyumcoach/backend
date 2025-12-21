@@ -24,4 +24,10 @@ public interface PostCommentMapper {
     void deleteByPostId(@Param("postId") Long postId);
 
     PostComment findByIdAndPostId(@Param("commentId") Long commentId, @Param("postId") Long postId);
+
+    /**
+     * 회원 탈퇴 시, 댓글 작성자 이메일을 시스템 탈퇴 계정으로 치환
+     */
+    int replaceAuthorEmail(@Param("fromEmail") String fromEmail,
+                           @Param("toEmail") String toEmail);
 }

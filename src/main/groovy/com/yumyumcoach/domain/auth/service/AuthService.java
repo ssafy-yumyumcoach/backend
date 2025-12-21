@@ -5,6 +5,8 @@ import com.yumyumcoach.domain.auth.entity.Account;
 import com.yumyumcoach.domain.auth.entity.RefreshToken;
 import com.yumyumcoach.domain.auth.mapper.AccountMapper;
 import com.yumyumcoach.domain.auth.mapper.RefreshTokenMapper;
+import com.yumyumcoach.domain.community.mapper.PostCommentMapper;
+import com.yumyumcoach.domain.community.mapper.PostMapper;
 import com.yumyumcoach.domain.user.mapper.ProfileMapper;
 import com.yumyumcoach.global.common.CredentialValidator;
 import com.yumyumcoach.global.exception.BusinessException;
@@ -30,6 +32,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenMapper refreshTokenMapper;
+    private final PostMapper postMapper;
+    private final PostCommentMapper postCommentMapper;
 
 
     //이메일 중복확인
@@ -137,6 +141,10 @@ public class AuthService {
 
         // refresh token 삭제
         deleteRefreshToken(request.getRefreshToken(), emailFromToken);
+
+        // 커뮤니티 컨텐츠(게시글/댓글) 작성자 이메일을 시스템 탈퇴 계정으로 치환
+        postCommentMapper.replaceAuthorEmail(authenticatedEmail, DELETED_SYSTEM_EMAIL);
+        postMapper.replaceAuthorEmail(authenticatedEmail, DELETED_SYSTEM_EMAIL);
 
         // 계정 삭제
         accountMapper.deleteAccountByEmail(authenticatedEmail);

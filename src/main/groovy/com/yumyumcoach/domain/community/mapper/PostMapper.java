@@ -26,4 +26,10 @@ public interface PostMapper {
     void increaseLikes(@Param("postId") Long postId);
 
     void decreaseLikes(@Param("postId") Long postId);
+
+    /**
+     * 회원 탈퇴 시, 게시글 작성자 이메일을 시스템 탈퇴 계정으로 치환
+     */
+    int replaceAuthorEmail(@Param("fromEmail") String fromEmail,
+                           @Param("toEmail") String toEmail);
 }
