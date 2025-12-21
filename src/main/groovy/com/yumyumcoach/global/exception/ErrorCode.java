@@ -59,6 +59,7 @@ public enum ErrorCode {
     EXERCISE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 운동을 찾을 수 없습니다."),
     EXERCISE_RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 운동 기록을 찾을 수 없습니다."),
     EXERCISE_RECORD_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 운동 기록에 대한 권한이 없습니다."),
+    EXERCISE_INVALID_KEYWORD(HttpStatus.BAD_REQUEST, "검색어는 2글자 이상 입력해주세요."),
 
     // ===== IMAGE =====
     IMAGE_UNSUPPORTED_CONTENT_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 이미지 형식입니다."),
