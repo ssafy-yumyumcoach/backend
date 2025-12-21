@@ -48,15 +48,15 @@ public class UserService {
         long followings = followMapper.countFollowings(email);
 
         MyTitleResponse current = titleMapper.findCurrentTitle(email);
-        List<MyTitleItemResponse> myTitleDtos = titleMapper.findMyTitles(email);
 
-        List<MyPageResponse.TitleItem> myTitles = myTitleDtos.stream()
-                .map(t -> MyPageResponse.TitleItem.builder()
-                        .titleId(t.getTitleId())
-                        .name(t.getName())
-                        .description(t.getDescription())
-                        .build())
-                .toList();
+        Long currentTitleId = null;
+        String currentTitleName = null;
+
+        if (current != null) {
+            currentTitleId = current.getCurrentTitleId();
+            currentTitleName = current.getCurrentTitleName();
+        }
+        List<MyTitleItemResponse> myTitles = titleMapper.findMyTitles(email);
 
         return MyPageResponse.builder()
                 .basic(MyPageResponse.Basic.builder()
@@ -79,8 +79,8 @@ public class UserService {
                         .activityLevel(profile.getActivityLevel())
                         .build())
                 .badges(MyPageResponse.Badges.builder()
-                        .currentTitleId(current.getCurrentTitleId())
-                        .currentTitleName(current.getCurrentTitleName())
+                        .currentTitleId(currentTitleId)
+                        .currentTitleName(currentTitleName)
                         .titles(myTitles)
                         .build())
                 .follow(MyPageResponse.Follow.builder()
@@ -191,6 +191,20 @@ public class UserService {
 
     @Transactional
     public MyTitleResponse selectMyTitle(String email, Long titleId) {
+
+        if (titleId == null) {
+            int updated = profileMapper.updateDisplayTitle(email, null);
+            if (updated == 0) {
+                throw new BusinessException(ErrorCode.PROFILE_NOT_FOUND);
+            }
+            // 해제면 current null 내려주게
+            return MyTitleResponse.builder()
+                    .currentTitleId(null)
+                    .currentTitleName(null)
+                    .currentTitleEmoji(null)
+                    .build();
+            // 또는 titleMapper.findCurrentTitle(email)가 null-safe면 그걸 써도 됨
+        }
 
         if (!titleMapper.ownsTitle(email, titleId)) {
             throw new BusinessException(ErrorCode.USER_TITLE_NOT_FOUND);

@@ -1,5 +1,6 @@
 package com.yumyumcoach.domain.user.controller;
 
+import com.yumyumcoach.domain.title.dto.SelectMyTitleRequest;
 import com.yumyumcoach.domain.user.dto.MyPageResponse;
 import com.yumyumcoach.domain.title.dto.MyTitleResponse;
 import com.yumyumcoach.domain.user.dto.UpdateMyBasicInfoRequest;
@@ -47,10 +48,10 @@ public class UserController {
     /**
      * 내 대표뱃지 설정
      */
-    @PutMapping("/titles/{titleId}")
-    public MyTitleResponse selectMyTitle(@PathVariable("titleId") Long titleId) {
+    @PatchMapping("/title")
+    public MyTitleResponse selectMyTitle(@RequestBody SelectMyTitleRequest request) {
         String email = CurrentUser.email();
-        return userService.selectMyTitle(email, titleId);
+        return userService.selectMyTitle(email, request.getTitleId());
     }
 }
 
