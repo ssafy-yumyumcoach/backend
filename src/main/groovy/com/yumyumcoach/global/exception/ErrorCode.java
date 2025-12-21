@@ -49,6 +49,10 @@ public enum ErrorCode {
     CHALLENGE_JOIN_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 챌린지에 대한 참여 이력을 찾을 수 없습니다."),
     CHALLENGE_LEAVE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "현재는 해당 챌린지에서 나갈 수 없습니다."),
     CHALLENGE_ALREADY_LEFT(HttpStatus.CONFLICT, "이미 나간 챌린지입니다."),
+    CHALLENGE_RECRUIT_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "현재 모집 기간이 아닙니다."),
+    CHALLENGE_ALREADY_COMPLETED(HttpStatus.CONFLICT, "이미 완료된 챌린지입니다."),
+    CHALLENGE_RULE_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "챌린지 룰이 설정되지 않았습니다."),
+    CHALLENGE_RULE_INVALID(HttpStatus.INTERNAL_SERVER_ERROR, "챌린지 룰 설정이 올바르지 않습니다"),
 
     // ===== TITLE =====
     TITLE_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 뱃지에 대한 권한이 없습니다."),
