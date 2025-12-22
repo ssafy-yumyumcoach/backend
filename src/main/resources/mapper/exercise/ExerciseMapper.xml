@@ -24,4 +24,19 @@
         FROM exercises
         WHERE id = #{exerciseId}
     </select>
+
+    <select id="searchExercise" resultType="com.yumyumcoach.domain.exercise.dto.SearchDto">
+        SELECT name, type, met
+        FROM exercises
+        WHERE name LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY name ASC
+            LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countExercises" resultType="int">
+        SELECT COUNT(*)
+        FROM exercises
+        WHERE name LIKE CONCAT('%', #{keyword}, '%')
+    </select>
+
 </mapper>

@@ -56,7 +56,8 @@ public class SecurityConfig {
                                 "/api/auth/check-email",
                                 "/api/auth/check-username",
                                 "/api/auth/sign-up",
-                                "/api/auth/refresh").permitAll()
+                                "/api/auth/refresh",
+                                "/api/exercises/search").permitAll()
                         .anyRequest().authenticated()
                 );
 
