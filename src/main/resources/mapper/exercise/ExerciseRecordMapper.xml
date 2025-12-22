@@ -11,7 +11,7 @@
         <result column="met" property="met"/>
         <result column="intensity_level" property="intensityLevel"/>
         <result column="type" property="type"/>
-        <result column="record_date" property="recordDate"/>
+        <result column="recorded_at" property="recordedAt"/>
         <result column="duration_minutes" property="durationMinutes"/>
         <result column="calories" property="calories"/>
     </resultMap>
@@ -23,7 +23,7 @@
                e.met,
                e.intensity_level,
                e.type,
-               er.record_date,
+               er.recorded_at,
                er.duration_minutes,
                er.calories
         FROM exercise_records er
@@ -39,25 +39,26 @@
                e.met,
                e.intensity_level,
                e.type,
-               er.record_date,
+               er.recorded_at,
                er.duration_minutes,
                er.calories
         FROM exercise_records er
                  JOIN exercises e ON er.exercise_id = e.id
         WHERE er.email = #{email}
-          AND er.record_date = #{recordDate}
-        ORDER BY er.id DESC
+        AND er.recorded_at >= CONCAT(#{recordDate}, ' 00:00:00')
+        AND er.recorded_at &lt; DATE_ADD(CONCAT(#{recordDate}, ' 00:00:00'), INTERVAL 1 DAY)
+        ORDER BY er.recorded_at DESC
     </select>
 
     <insert id="insert" parameterType="com.yumyumcoach.domain.exercise.entity.ExerciseRecord" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO exercise_records (email, exercise_id, record_date, duration_minutes, calories)
-        VALUES (#{email}, #{exerciseId}, #{recordDate}, #{durationMinutes}, #{calories})
+        INSERT INTO exercise_records (email, exercise_id, recorded_at, duration_minutes, calories)
+        VALUES (#{email}, #{exerciseId}, #{recordedAt}, #{durationMinutes}, #{calories})
     </insert>
 
     <update id="update" parameterType="com.yumyumcoach.domain.exercise.entity.ExerciseRecord">
         UPDATE exercise_records
         SET exercise_id      = #{exerciseId},
-            record_date      = #{recordDate},
+            recorded_At      = #{recordedAt},
             duration_minutes = #{durationMinutes},
             calories         = #{calories}
         WHERE id = #{id}

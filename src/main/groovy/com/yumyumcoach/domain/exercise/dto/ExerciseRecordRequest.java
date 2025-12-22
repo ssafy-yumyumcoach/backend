@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 운동 기록 생성/수정 요청 DTO.
@@ -20,7 +21,7 @@ public class ExerciseRecordRequest {
     @NotNull
     private Long exerciseId;
     @NotNull
-    private LocalDate recordDate;
+    private LocalDateTime recordedAt;
     @NotNull
     @Positive
     private Double durationMinutes;

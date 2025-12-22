@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 운동 기록 엔티티.
@@ -18,7 +19,7 @@ public class ExerciseRecord {
     private Long id;
     private String email;
     private Long exerciseId;
-    private LocalDate recordDate;
+    private LocalDateTime recordedAt;
     private Double durationMinutes;
     private Double calories;
 }
