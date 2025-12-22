@@ -40,7 +40,7 @@ public interface DietRecordMapper {
 
     List<DietRecordDto> selectDietRecordsByUserAndDate(
             @Param("email") String email,
-            @Param("recordDate") LocalDate recordDate,
+            @Param("recordedAt") LocalDate recordedAt,
             @Param("offset") int offset,
             @Param("limit") int limit
     );

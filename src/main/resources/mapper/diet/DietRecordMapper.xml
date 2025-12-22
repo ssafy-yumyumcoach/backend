@@ -73,7 +73,7 @@
             image_url         AS imageUrl
         FROM diet_records
         WHERE email = #{email}
-          AND DATE(recorded_at) = #{date}
+          AND DATE(recorded_at) = #{recordedAt}
         ORDER BY recorded_at DESC, id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
