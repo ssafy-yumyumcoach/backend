@@ -96,4 +96,11 @@
         SET likes = IF(likes > 0, likes - 1, 0)
         WHERE id = #{postId}
     </update>
+
+    <!-- 회원 탈퇴 시 작성자 이메일 치환 -->
+    <update id="replaceAuthorEmail">
+        UPDATE posts
+        SET author_email = #{toEmail}
+        WHERE author_email = #{fromEmail}
+    </update>
 </mapper>

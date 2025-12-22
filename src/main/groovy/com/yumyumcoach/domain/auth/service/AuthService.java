@@ -5,6 +5,8 @@ import com.yumyumcoach.domain.auth.entity.Account;
 import com.yumyumcoach.domain.auth.entity.RefreshToken;
 import com.yumyumcoach.domain.auth.mapper.AccountMapper;
 import com.yumyumcoach.domain.auth.mapper.RefreshTokenMapper;
+import com.yumyumcoach.domain.community.mapper.PostCommentMapper;
+import com.yumyumcoach.domain.community.mapper.PostMapper;
 import com.yumyumcoach.domain.user.mapper.ProfileMapper;
 import com.yumyumcoach.global.common.CredentialValidator;
 import com.yumyumcoach.global.exception.BusinessException;
@@ -23,11 +25,15 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class AuthService {
 
+    private static final String DELETED_SYSTEM_EMAIL = "deleted@system";
+
     private final AccountMapper accountMapper;
     private final ProfileMapper profileMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenMapper refreshTokenMapper;
+    private final PostMapper postMapper;
+    private final PostCommentMapper postCommentMapper;
 
 
     //이메일 중복확인
@@ -47,6 +53,8 @@ public class AuthService {
     // 로그인: DB 에 저장된 이메일인지와 확인, 비밀번호가 일치하는지 확인 후 access token 과 refresh token 생성 후 로그인
     @Transactional(readOnly = false)
     public SignInResponse SignIn(SignInRequest request) {
+        blockIfDeletedSystemEmail(request.getEmail());
+
         Account account = accountMapper.findByEmail(request.getEmail());
 
         // 해당 이메일이 DB 에 없을 때
@@ -134,6 +142,10 @@ public class AuthService {
         // refresh token 삭제
         deleteRefreshToken(request.getRefreshToken(), emailFromToken);
 
+        // 커뮤니티 컨텐츠(게시글/댓글) 작성자 이메일을 시스템 탈퇴 계정으로 치환
+        postCommentMapper.replaceAuthorEmail(authenticatedEmail, DELETED_SYSTEM_EMAIL);
+        postMapper.replaceAuthorEmail(authenticatedEmail, DELETED_SYSTEM_EMAIL);
+
         // 계정 삭제
         accountMapper.deleteAccountByEmail(authenticatedEmail);
 
@@ -149,6 +161,7 @@ public class AuthService {
 
         // 클라이언트가 보낸 refresh token 이 이 서버에 저장된 것과 일치하는지 확인
         String emailFromToken = jwtTokenProvider.getEmail(request.getRefreshToken());
+        blockIfDeletedSystemEmail(emailFromToken);
         String tokenHash = TokenHashUtil.sha256Hex(request.getRefreshToken());
 
         RefreshToken savedToken = refreshTokenMapper.findByEmailAndHash(emailFromToken, tokenHash);
@@ -204,6 +217,12 @@ public class AuthService {
         int deleted = refreshTokenMapper.deleteByEmailAndHash(emailFromToken, tokenHash);
         if (deleted == 0) {
             throw new BusinessException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
+        }
+    }
+
+    private static void blockIfDeletedSystemEmail(String email) {
+        if (DELETED_SYSTEM_EMAIL.equals(email)) {
+            throw new BusinessException(ErrorCode.AUTH_LOGIN_NOT_ALLOWED, "탈퇴한 회원은 로그인할 수 없습니다.");
         }
     }
 }
