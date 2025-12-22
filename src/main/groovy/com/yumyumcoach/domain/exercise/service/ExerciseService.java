@@ -1,5 +1,7 @@
 package com.yumyumcoach.domain.exercise.service;
 
+import com.yumyumcoach.domain.ai.event.ExerciseReviewRequestedEvent;
+import com.yumyumcoach.domain.ai.service.AiBackgroundJobService;
 import com.yumyumcoach.domain.exercise.dto.*;
 import com.yumyumcoach.domain.exercise.entity.Exercise;
 import com.yumyumcoach.domain.exercise.entity.ExerciseRecord;
@@ -12,11 +14,13 @@ import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
 import groovy.util.logging.Slf4j;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,6 +32,7 @@ public class ExerciseService {
     private final ExerciseMapper exerciseMapper;
     private final ExerciseRecordMapper exerciseRecordMapper;
     private final ProfileMapper profileMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final int MIN_KEYWORD_LENGTH = 2;
     private static final int SIZE_LIMIT = 10;
@@ -39,7 +44,7 @@ public class ExerciseService {
                 .toList();
     }
 
-    public List<ExerciseRecordResponse> getMyExerciseRecords(String email, java.time.LocalDate recordDate) {
+    public List<ExerciseRecordResponse> getMyExerciseRecords(String email, LocalDate recordDate) {
         return exerciseRecordMapper.findByEmailAndDate(email, recordDate).stream()
                 .map(this::toExerciseRecordResponse)
                 .toList();
@@ -57,9 +62,14 @@ public class ExerciseService {
 
     @Transactional
     public List<ExerciseRecordResponse> createMyExerciseRecords(String email, List<ExerciseRecordRequest> requests) {
-        return requests.stream()
+        List<ExerciseRecordResponse> result = requests.stream()
                 .map(req -> createExerciseRecord(email, req))
                 .toList();
+
+        LocalDate anchor = requests.get(requests.size() - 1).getRecordedAt().toLocalDate();
+        eventPublisher.publishEvent(new ExerciseReviewRequestedEvent(email, anchor));
+
+        return result;
     }
 
     @Transactional
@@ -78,15 +88,21 @@ public class ExerciseService {
                 .build();
 
         exerciseRecordMapper.update(exerciseRecord);
+
+        LocalDate anchor = request.getRecordedAt().toLocalDate();
+        eventPublisher.publishEvent(new ExerciseReviewRequestedEvent(email, anchor));
         return getMyExerciseRecordDetail(email, recordId);
     }
 
     @Transactional
     public DeleteExerciseRecordResponse deleteMyExerciseRecord(String email, Long recordId) {
         checkRecordOwnerOrThrow(email, recordId);
-
+        ExerciseRecordWithExercise before = exerciseRecordMapper.findDetailByIdAndEmail(recordId, email);
+        if (before == null) throw new BusinessException(ErrorCode.EXERCISE_RECORD_NOT_FOUND);
         exerciseRecordMapper.delete(recordId, email);
 
+        LocalDate anchor = before.getRecordedAt().toLocalDate();
+        eventPublisher.publishEvent(new ExerciseReviewRequestedEvent(email, anchor));
         return DeleteExerciseRecordResponse.builder()
                 .recordId(recordId)
                 .deleted(true)

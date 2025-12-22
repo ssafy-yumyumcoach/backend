@@ -4,6 +4,7 @@ import com.yumyumcoach.domain.diet.dto.CreateDietRecordRequest;
 import com.yumyumcoach.domain.diet.dto.DietRecordDto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -46,5 +47,11 @@ public interface DietRecordMapper {
     );
 
     String selectOwnerEmail(@Param("id") Long id);
+
+    LocalDateTime selectRecordedAtByIdAndEmail(
+            @Param("id") Long id,
+            @Param("email") String email
+    );
+
 }
 
