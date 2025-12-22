@@ -14,7 +14,7 @@ public interface ExerciseRecordMapper {
                                                       @Param("email") String email);
 
     List<ExerciseRecordWithExercise> findByEmailAndDate(@Param("email") String email,
-                                                        @Param("recordDate") LocalDate recordDate);
+                                                        @Param("recordedAt") LocalDate recordedAt);
 
     void insert(ExerciseRecord exerciseRecord);
 
