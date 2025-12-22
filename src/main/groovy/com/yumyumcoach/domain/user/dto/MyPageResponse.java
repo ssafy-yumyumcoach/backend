@@ -1,5 +1,6 @@
 package com.yumyumcoach.domain.user.dto;
 
+import com.yumyumcoach.domain.title.dto.MyTitleItemResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -50,7 +51,7 @@ public class MyPageResponse {
     public static class Badges {
         private Long currentTitleId;      // profiles.display_title_id
         private String currentTitleName;  // titles.name
-        private List<TitleItem> titles;   // account_titles 기준
+        private List<MyTitleItemResponse> titles;   // account_titles 기준
     }
 
     @Getter @Builder @NoArgsConstructor @AllArgsConstructor
@@ -58,6 +59,7 @@ public class MyPageResponse {
         private Long titleId;       // titles.id
         private String name;        // titles.name
         private String description; // titles.description
+        private String iconEmoji;
     }
 
     @Getter @Builder @NoArgsConstructor @AllArgsConstructor

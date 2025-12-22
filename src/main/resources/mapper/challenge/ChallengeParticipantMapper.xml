@@ -16,6 +16,7 @@
         <result property="requiredSuccessDays" column="required_success_days"/>
         <result property="dailyTargetValue"   column="daily_target_value"/>
         <result property="progressPercentage" column="progress_percentage"/>
+        <result property="successDays"         column="success_days"/>
         <result property="lastEvaluatedAt"    column="last_evaluated_at"/>
         <result property="completedAt"        column="completed_at"/>
     </resultMap>
@@ -89,7 +90,8 @@
     <!-- 진행률 및 마지막 평가 시각 갱신 -->
     <update id="updateProgress">
         UPDATE challenge_participants
-        SET progress_percentage = #{progressPercentage},
+        SET success_days = #{successDays},
+            progress_percentage = #{progressPercentage},
             last_evaluated_at = #{evaluatedAt}
         WHERE challenge_id = #{challengeId}
           AND email = #{email}

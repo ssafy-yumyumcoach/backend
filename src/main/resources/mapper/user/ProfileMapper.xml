@@ -88,4 +88,23 @@
         WHERE email = #{email}
     </update>
 
+    <!-- 상대방 프로필 조회 -->
+    <select id="findUserProfileRow"
+            parameterType="long"
+            resultType="com.yumyumcoach.domain.user.dto.UserProfileRow">
+        SELECT
+            a.id AS userId,
+            a.email AS email,
+            a.username AS username,
+            p.introduction AS introduction,
+            p.profile_image_url AS profileImageUrl,
+            t.id AS currentTitleId,
+            t.name AS currentTitleName,
+            t.icon_emoji AS currentTitleIconEmoji
+        FROM accounts a
+                 JOIN profiles p ON p.email = a.email
+                 LEFT JOIN titles t ON t.id = p.display_title_id
+        WHERE a.id = #{userId}
+    </select>
+
 </mapper>

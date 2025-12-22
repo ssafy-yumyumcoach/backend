@@ -5,6 +5,8 @@ import com.yumyumcoach.domain.challenge.entity.ChallengeParticipant;
 import com.yumyumcoach.domain.challenge.mapper.ChallengeMapper;
 import com.yumyumcoach.domain.challenge.mapper.ChallengeParticipantMapper;
 import com.yumyumcoach.domain.challenge.model.GoalType;
+import com.yumyumcoach.global.exception.BusinessException;
+import com.yumyumcoach.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,29 +36,25 @@ public class ChallengeParticipantService {
         // 1) 챌린지 / 참여 정보 조회
         Challenge challenge = challengeMapper.findById(challengeId);
         if (challenge == null) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalArgumentException("존재하지 않는 챌린지입니다. id=" + challengeId);
+            throw new BusinessException(ErrorCode.CHALLENGE_NOT_FOUND);
         }
 
         ChallengeParticipant participant = challengeParticipantMapper.findByChallengeIdAndEmail(challengeId, email);
         if (participant == null) {
-            // TODO: 커스텀 예외로 교체
-            throw new IllegalStateException("참여 이력이 없는 챌린지입니다.");
+            throw new BusinessException(ErrorCode.CHALLENGE_JOIN_NOT_FOUND);
         }
 
         // 2) 목표 타입에 따라 분기 (실제 쿼리/계산은 다음 이슈에서 구현)
-        GoalType goalType = GoalType.from(challenge.getGoalType());
-
-        // TODO: goalType / participant 정보에 따라 successDays / progressPercentage 계산
-        // int successDays = ...
-        // double progress = ...
-
-        // 지금은 껍데기만, 실제 값은 다음 이슈에서 구현
-        // 일단 0으로 초기화 예시만 넣어둔다.
+        // ✅ TODO(다음 스텝): goalType별로 successDays를 "기록 테이블"에서 계산해야 함
+        // 지금 스텝에서는 최소한 "DB 업데이트 흐름"이 살아있게만 만든다.
         int successDays = participant.getSuccessDays() != null ? participant.getSuccessDays() : 0;
-        double progress = participant.getProgressPercentage() != null
-                ? participant.getProgressPercentage()
-                : 0.0;
+
+        int required = participant.getRequiredSuccessDays() != null ? participant.getRequiredSuccessDays() : 0;
+        double progress = 0.0;
+        if (required > 0) {
+            progress = (successDays * 100.0) / required;
+            if (progress > 100.0) progress = 100.0;
+        }
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -64,17 +62,13 @@ public class ChallengeParticipantService {
         participant.updateProgress(successDays, progress, now);
 
         // 4. DB 반영
-        // 현재 Mapper 에는 successDays 까지 함께 업데이트하는 메서드가 없으므로
-        // 이 부분은 다음 이슈에서 함께 정의할 예정.
-        //
-        // 예시:
-        // challengeParticipantMapper.updateProgressAndSuccessDays(
-        //         challengeId,
-        //         email,
-        //         successDays,
-        //         progress,
-        //         now
-        // );
+        challengeParticipantMapper.updateProgress(
+                challengeId,
+                email,
+                successDays,
+                progress,
+                now
+        );
     }
 }
 
