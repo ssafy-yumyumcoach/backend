@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS post_likes (
 CREATE TABLE IF NOT EXISTS diet_records (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   email VARCHAR(255) NOT NULL,
-  record_date DATE NOT NULL,
+  recorded_at DATETIME NOT NULL,
   meal_type VARCHAR(255) NOT NULL,
   image_url VARCHAR(1024) DEFAULT NULL,
   PRIMARY KEY (id),
@@ -171,11 +171,11 @@ CREATE TABLE IF NOT EXISTS exercise_records (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   email VARCHAR(255) NOT NULL,
   exercise_id BIGINT UNSIGNED NOT NULL,
-  record_date DATE NOT NULL,
+  recorded_at DATETIME NOT NULL,
   duration_minutes DOUBLE NOT NULL,
   calories DOUBLE NOT NULL,
   PRIMARY KEY (id),
-  KEY idx_exercise_records_email_date (email, record_date),
+  KEY idx_exercise_records_email_recorded_at (email, recorded_at),
   CONSTRAINT fk_exercise_records_account
     FOREIGN KEY (email) REFERENCES accounts(email),
   CONSTRAINT fk_exercise_records_exercise
