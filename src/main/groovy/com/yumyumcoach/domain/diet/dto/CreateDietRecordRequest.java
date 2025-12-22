@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -20,7 +20,7 @@ public class CreateDietRecordRequest {
     private Long id; // insert 시 생성된 PK를 MyBatis가 채우기 위함
 
     @NotNull
-    private LocalDate recordDate;
+    private LocalDateTime recordedAt;
 
     @NotBlank
     private String mealType; // BREAKFAST/LUNCH/DINNER/SNACK...

@@ -8,7 +8,7 @@
     <!-- 식단 상세 + 음식 리스트 -->
     <resultMap id="DietRecordDetailMap" type="com.yumyumcoach.domain.diet.dto.DietRecordDto">
         <id column="id" property="id"/>
-        <result column="record_date" property="recordDate"/>
+        <result column="recorded_at" property="recordedAt"/>
         <result column="meal_type" property="mealType"/>
         <result column="image_url" property="imageUrl"/>
 
@@ -30,7 +30,7 @@
     <select id="selectDietRecordDetail" resultMap="DietRecordDetailMap">
         SELECT
             dr.id,
-            DATE(dr.record_date) AS record_date,
+            DATE(dr.recorded_at) AS recorded_at,
             dr.meal_type,
             dr.image_url,
             df.id          AS diet_food_id,
@@ -55,12 +55,12 @@
     <select id="selectDietRecordsByUser" resultType="com.yumyumcoach.domain.diet.dto.DietRecordDto">
         SELECT
             id,
-            DATE(record_date) AS recordDate,
+            DATE(recorded_at) AS recordedAt,
             meal_type         AS mealType,
             image_url         AS imageUrl
         FROM diet_records
         WHERE email = #{email}
-        ORDER BY record_date DESC, id DESC
+        ORDER BY recorded_at DESC, id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
@@ -68,13 +68,13 @@
     <select id="selectDietRecordsByUserAndDate" resultType="com.yumyumcoach.domain.diet.dto.DietRecordDto">
         SELECT
             id,
-            DATE(record_date) AS recordDate,
+            DATE(recorded_at) AS recordedAt,
             meal_type         AS mealType,
             image_url         AS imageUrl
         FROM diet_records
         WHERE email = #{email}
-          AND DATE(record_date) = #{recordDate}
-        ORDER BY record_date DESC, id DESC
+          AND DATE(recorded_at) = #{date}
+        ORDER BY recorded_at DESC, id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
@@ -85,12 +85,12 @@
             keyProperty="req.id">
         INSERT INTO diet_records (
             email,
-            record_date,
+            recorded_at,
             meal_type,
             image_url
         ) VALUES (
                      #{email},
-                     #{req.recordDate},
+                     #{req.recordedAt},
                      #{req.mealType},
                      #{req.imageUrl}
                  )
@@ -100,7 +100,7 @@
     <update id="updateDietRecord" parameterType="map">
         UPDATE diet_records
         SET
-            record_date = #{req.recordDate},
+            recorded_at = #{req.recordedAt},
             meal_type   = #{req.mealType}
             image_url   = #{req.imageUrl}
         WHERE id = #{id}
