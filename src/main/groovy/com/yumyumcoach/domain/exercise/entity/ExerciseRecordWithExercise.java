@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 운동 기록 + 운동 기본 정보 조인 결과.
@@ -21,7 +22,7 @@ public class ExerciseRecordWithExercise {
     private Double met;
     private String intensityLevel;
     private String type;
-    private LocalDate recordDate;
+    private LocalDateTime recordedAt;
     private Double durationMinutes;
     private Double calories;
 }

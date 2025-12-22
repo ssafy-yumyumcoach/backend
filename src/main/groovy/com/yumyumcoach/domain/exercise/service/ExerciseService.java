@@ -72,7 +72,7 @@ public class ExerciseService {
                 .id(recordId)
                 .email(email)
                 .exerciseId(request.getExerciseId())
-                .recordDate(request.getRecordDate())
+                .recordedAt(request.getRecordedAt())
                 .durationMinutes(request.getDurationMinutes())
                 .calories(calories)
                 .build();
@@ -151,7 +151,7 @@ public class ExerciseService {
                 .met(record.getMet())
                 .intensityLevel(record.getIntensityLevel())
                 .type(record.getType())
-                .recordDate(record.getRecordDate())
+                .recordedAt(record.getRecordedAt())
                 .durationMinutes(record.getDurationMinutes())
                 .calories(record.getCalories())
                 .build();
@@ -163,7 +163,7 @@ public class ExerciseService {
         ExerciseRecord exerciseRecord = ExerciseRecord.builder()
                 .email(email)
                 .exerciseId(request.getExerciseId())
-                .recordDate(request.getRecordDate())
+                .recordedAt(request.getRecordedAt())
                 .durationMinutes(request.getDurationMinutes())
                 .calories(calories)
                 .build();

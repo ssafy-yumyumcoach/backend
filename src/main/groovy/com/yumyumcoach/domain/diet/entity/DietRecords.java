@@ -11,13 +11,13 @@ public class DietRecords {
 
     private Long id;
     private String email;
-    private LocalDateTime recordDate;
+    private LocalDateTime recordedAt;
     private String mealType;
 
     @Builder
-    public DietRecords(String email, LocalDateTime recordDate, String mealType) {
+    public DietRecords(String email, LocalDateTime recordedAt, String mealType) {
         this.email = email;
-        this.recordDate = recordDate;
+        this.recordedAt = recordedAt;
         this.mealType = mealType;
     }
 }
