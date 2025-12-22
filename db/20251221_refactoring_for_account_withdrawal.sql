@@ -1,69 +1,66 @@
+USE yumyumcoach;
 
+-- 공통: 특정 테이블의 email FK를 찾아 DROP 후 CASCADE로 재생성
+DELIMITER $$
 
-ALTER TABLE account_titles
-  DROP FOREIGN KEY fk_account_titles_account,
-  ADD CONSTRAINT fk_account_titles_account
-    FOREIGN KEY (email) REFERENCES accounts(email)
-    ON DELETE CASCADE;
+CREATE PROCEDURE reset_email_fk(
+  IN p_table VARCHAR(64),
+  IN p_column VARCHAR(64),
+  IN p_fkname VARCHAR(64)
+)
+BEGIN
+  DECLARE v_fk VARCHAR(64);
 
+  SELECT CONSTRAINT_NAME INTO v_fk
+  FROM information_schema.KEY_COLUMN_USAGE
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = p_table
+    AND COLUMN_NAME = p_column
+    AND REFERENCED_TABLE_NAME = 'accounts'
+  LIMIT 1;
 
-ALTER TABLE challenge_participants
-  DROP FOREIGN KEY fk_challenge_participants_account,
-  ADD CONSTRAINT fk_challenge_participants_account
-    FOREIGN KEY (email) REFERENCES accounts(email)
-    ON DELETE CASCADE;
+  IF v_fk IS NOT NULL THEN
+    SET @s1 = CONCAT('ALTER TABLE ', p_table, ' DROP FOREIGN KEY ', v_fk);
+    PREPARE stmt1 FROM @s1;
+    EXECUTE stmt1;
+    DEALLOCATE PREPARE stmt1;
+  END IF;
 
+  SET @s2 = CONCAT(
+    'ALTER TABLE ', p_table,
+    ' ADD CONSTRAINT ', p_fkname,
+    ' FOREIGN KEY (', p_column, ') REFERENCES accounts(email) ON DELETE CASCADE'
+  );
+  PREPARE stmt2 FROM @s2;
+  EXECUTE stmt2;
+  DEALLOCATE PREPARE stmt2;
+END$$
 
-ALTER TABLE diet_records
-  DROP FOREIGN KEY fk_diet_records_account,
-  ADD CONSTRAINT fk_diet_records_account
-    FOREIGN KEY (email) REFERENCES accounts(email)
-    ON DELETE CASCADE;
+DELIMITER ;
 
+-- 적용 대상들
+CALL reset_email_fk('account_titles',        'email',          'fk_account_titles_account');
+CALL reset_email_fk('challenge_participants','email',          'fk_challenge_participants_account');
+CALL reset_email_fk('diet_records',           'email',          'fk_diet_records_account');
+CALL reset_email_fk('exercise_records',       'email',          'fk_exercise_records_account');
+CALL reset_email_fk('post_likes',              'email',          'fk_post_likes_account');
+CALL reset_email_fk('profiles',                'email',          'fk_profiles_account');
+CALL reset_email_fk('refresh_tokens',          'email',          'fk_refresh_email');
 
-ALTER TABLE exercise_records
-  DROP FOREIGN KEY fk_exercise_records_account,
-  ADD CONSTRAINT fk_exercise_records_account
-    FOREIGN KEY (email) REFERENCES accounts(email)
-    ON DELETE CASCADE;
+-- follows는 email 컬럼이 2개라 별도 처리
+CALL reset_email_fk('follows', 'followee_email', 'fk_follows_followee');
+CALL reset_email_fk('follows', 'follower_email', 'fk_follows_follower');
 
-
-ALTER TABLE follows
-  DROP FOREIGN KEY fk_follows_followee,
-  DROP FOREIGN KEY fk_follows_follower,
-  ADD CONSTRAINT fk_follows_followee
-    FOREIGN KEY (followee_email) REFERENCES accounts(email)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_follows_follower
-      FOREIGN KEY (follower_email) REFERENCES accounts(email)
-      ON DELETE CASCADE;
-
-
-ALTER TABLE post_likes
-  DROP FOREIGN KEY fk_post_likes_account,
-  ADD CONSTRAINT fk_post_likes_account
-    FOREIGN KEY (email) REFERENCES accounts(email)
-    ON DELETE CASCADE;
-
-
-ALTER TABLE profiles
-  DROP FOREIGN KEY fk_profiles_account,
-  ADD CONSTRAINT fk_profiles_account
-    FOREIGN KEY (email) REFERENCES accounts(email)
-    ON DELETE CASCADE;
-
-
-ALTER TABLE refresh_tokens
-  DROP FOREIGN KEY fk_refresh_email,
-  ADD CONSTRAINT fk_refresh_email
-    FOREIGN KEY (email) REFERENCES accounts(email)
-    ON DELETE CASCADE;
+-- 정리
+DROP PROCEDURE reset_email_fk;
 
 
 INSERT INTO accounts (email, username, password)
-VALUES ('deleted@system','dummed', 'dummy')
-ON DUPLICATE KEY UPDATE updated_at= NOW();
+VALUES ('deleted@system','탈퇴한 사용자', 'dummy')
+ON DUPLICATE KEY UPDATE
+username = VALUES(username),
+password = VALUES(password);
 
 INSERT INTO profiles (email, introduction)
 VALUES ('deleted@system', '탈퇴한 회원입니다.')
-ON DUPLICATE KEY UPDATE username = '탈퇴회원', updated_at = NOW();
+ON DUPLICATE KEY UPDATE introduction = VALUES(introduction);
