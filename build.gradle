@@ -49,8 +49,6 @@ dependencies {
 
     implementation platform("software.amazon.awssdk:bom:2.25.0")
     implementation "software.amazon.awssdk:s3"
-
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
 }
 
 tasks.named('test') {
