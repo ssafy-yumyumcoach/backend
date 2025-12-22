@@ -45,8 +45,8 @@
         FROM exercise_records er
                  JOIN exercises e ON er.exercise_id = e.id
         WHERE er.email = #{email}
-        AND er.recorded_at >= CONCAT(#{recordDate}, ' 00:00:00')
-        AND er.recorded_at &lt; DATE_ADD(CONCAT(#{recordDate}, ' 00:00:00'), INTERVAL 1 DAY)
+        AND er.recorded_at >= CONCAT(#{recordedAt}, ' 00:00:00')
+        AND er.recorded_at &lt; DATE_ADD(CONCAT(#{recordedAt}, ' 00:00:00'), INTERVAL 1 DAY)
         ORDER BY er.recorded_at DESC
     </select>
 
