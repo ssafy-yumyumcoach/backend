@@ -10,6 +10,7 @@ import com.yumyumcoach.domain.user.entity.Profile;
 import com.yumyumcoach.domain.user.mapper.ProfileMapper;
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
+import groovy.util.logging.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,10 +23,15 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class ExerciseService {
     private final ExerciseMapper exerciseMapper;
     private final ExerciseRecordMapper exerciseRecordMapper;
     private final ProfileMapper profileMapper;
+
+    private static final int MIN_KEYWORD_LENGTH = 2;
+    private static final int SIZE_LIMIT = 10;
+    private static final int SIZE_DEFAULT = 5;
 
     public List<ExerciseResponse> getExercises() {
         return exerciseMapper.findAll().stream()
@@ -164,6 +170,52 @@ public class ExerciseService {
 
         exerciseRecordMapper.insert(exerciseRecord);
         return getMyExerciseRecordDetail(email, exerciseRecord.getId());
+    }
+
+    // 운동 검색 기능
+    @Transactional(readOnly = true)
+    public SearchResponse searchExercise(String keyword, int page, int size) {
+
+        // 파라미터 예외처리 및 스케일링
+        keyword = validateKeyword(keyword);
+        page = Math.max(0, page);
+        size = normalizeSize(size);
+
+        //offset 설정
+        int offset = page * size;
+
+        // 현재 페이지 결과 조회
+        List<SearchDto> searchResult = exerciseMapper.searchExercise(keyword, size, offset);
+
+        // 전체 개수 조회
+        int total = exerciseMapper.countExercises(keyword);
+
+        return SearchResponse.builder()
+                .page(page)
+                .size(size)
+                .total(total)
+                .result(searchResult)
+                .build();
+    }
+
+    private static int normalizeSize(int size) {
+        if (size <= 0) {
+            size = SIZE_DEFAULT;
+        }
+        else if (size > SIZE_LIMIT) {
+            size = SIZE_LIMIT;
+        }
+
+        return size;
+    }
+
+    private static String validateKeyword(String keyword) {
+        if (keyword == null || keyword.trim().length() < MIN_KEYWORD_LENGTH) {
+            throw new BusinessException(ErrorCode.EXERCISE_INVALID_KEYWORD);
+        }
+        keyword = keyword.trim();
+
+        return keyword;
     }
 }
 
