@@ -65,15 +65,17 @@
     </select>
 
     <!-- 사용자별 특정 날짜 식단 목록 (페이징) -->
-    <select id="selectDietRecordsByUserAndDate" resultType="com.yumyumcoach.domain.diet.dto.DietRecordDto">
+    <select id="selectDietRecordsByUserAndDate"
+            resultType="com.yumyumcoach.domain.diet.dto.DietRecordDto">
         SELECT
             id,
-            DATE(recorded_at) AS recordedAt,
-            meal_type         AS mealType,
-            image_url         AS imageUrl
+            recorded_at      AS recordedAt,
+            meal_type        AS mealType,
+            image_url        AS imageUrl
         FROM diet_records
         WHERE email = #{email}
-          AND DATE(recorded_at) = #{recordedAt}
+          AND recorded_at >= CONCAT(#{recordedAt}, ' 00:00:00')
+          AND recorded_at &lt;  DATE_ADD(CONCAT(#{recordedAt}, ' 00:00:00'), INTERVAL 1 DAY)
         ORDER BY recorded_at DESC, id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -101,7 +103,7 @@
         UPDATE diet_records
         SET
             recorded_at = #{req.recordedAt},
-            meal_type   = #{req.mealType}
+            meal_type   = #{req.mealType},
             image_url   = #{req.imageUrl}
         WHERE id = #{id}
           AND email = #{email}
@@ -118,6 +120,13 @@
         SELECT email
         FROM diet_records
         WHERE id = #{id}
+    </select>
+
+    <select id="selectRecordedAtByIdAndEmail" resultType="java.time.LocalDateTime">
+        SELECT recorded_at
+        FROM diet_records
+        WHERE id = #{id}
+          AND email = #{email}
     </select>
 
 </mapper>

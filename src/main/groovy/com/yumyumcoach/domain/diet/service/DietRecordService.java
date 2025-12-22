@@ -1,15 +1,18 @@
 package com.yumyumcoach.domain.diet.service;
 
+import com.yumyumcoach.domain.ai.event.NutritionReviewRequestedEvent;
 import com.yumyumcoach.domain.diet.dto.CreateDietRecordRequest;
 import com.yumyumcoach.domain.diet.dto.DietRecordDto;
 import com.yumyumcoach.domain.diet.mapper.DietFoodMapper;
 import com.yumyumcoach.domain.diet.mapper.DietRecordMapper;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +22,7 @@ public class DietRecordService {
 
     private final DietRecordMapper dietRecordMapper;
     private final DietFoodMapper dietFoodMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<DietRecordDto> getMyDiets(String email, LocalDate date, int page, int size) {
@@ -47,6 +51,9 @@ public class DietRecordService {
         if (request.getItems() != null && !request.getItems().isEmpty()) {
             dietFoodMapper.insertDietFoods(dietId, request.getItems());
         }
+
+        LocalDate anchor = request.getRecordedAt().toLocalDate();
+        eventPublisher.publishEvent(new NutritionReviewRequestedEvent(email, anchor));
         return dietId;
     }
 
@@ -59,11 +66,18 @@ public class DietRecordService {
         if (!owner.equals(email)) {
             throw new BusinessException(ErrorCode.DIET_FORBIDDEN);
         }
+
+        LocalDateTime recorededAt = dietRecordMapper.selectRecordedAtByIdAndEmail(dietId, email);
+        if (recorededAt == null) throw new BusinessException(ErrorCode.DIET_FORBIDDEN);
+        LocalDate anchor = recorededAt.toLocalDate();
+
         dietFoodMapper.deleteDietFoodsByDietId(dietId);
         int deleted = dietRecordMapper.deleteDietRecord(dietId, email);
         if (deleted == 0) {
             throw new BusinessException(ErrorCode.DIET_NOT_FOUND);
         }
+
+        eventPublisher.publishEvent(new NutritionReviewRequestedEvent(email, anchor));
     }
 
     @Transactional
@@ -84,6 +98,9 @@ public class DietRecordService {
         if (request.getItems() != null && !request.getItems().isEmpty()) {
             dietFoodMapper.insertDietFoods(dietId, request.getItems());
         }
+
+        LocalDate anchor = request.getRecordedAt().toLocalDate();
+        eventPublisher.publishEvent(new NutritionReviewRequestedEvent(email, anchor));
     }
 }
 
