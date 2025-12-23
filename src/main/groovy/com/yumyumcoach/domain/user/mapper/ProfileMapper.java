@@ -43,5 +43,10 @@ public interface ProfileMapper {
      * 상대방 프로필 조회
      */
     UserProfileRow findUserProfileRow(@Param("userId") Long userId);
+
+    /**
+     * 내 몸무게 조회
+     */
+    Double findCurrentWeightByEmail(@Param("email") String email);
 }
 

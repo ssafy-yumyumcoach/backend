@@ -9,6 +9,7 @@ import com.yumyumcoach.domain.challenge.mapper.ChallengeParticipantMapper;
 import com.yumyumcoach.domain.challenge.mapper.ChallengeRuleMapper;
 import com.yumyumcoach.domain.challenge.model.DifficultyCode;
 import com.yumyumcoach.domain.challenge.model.GoalType;
+import com.yumyumcoach.domain.user.mapper.ProfileMapper;
 import com.yumyumcoach.global.common.CdnUrlResolver;
 import com.yumyumcoach.global.exception.BusinessException;
 import com.yumyumcoach.global.exception.ErrorCode;
@@ -40,6 +41,10 @@ public class ChallengeService {
     private final ChallengeParticipantMapper challengeParticipantMapper;
     private final ChallengeRuleMapper challengeRuleMapper;
     private final CdnUrlResolver cdnUrlResolver;
+    private final ProfileMapper profileMapper;
+
+    // 몸무게 기본값
+    private static final double DEFAULT_WEIGHT_KG = 60.0;
 
     /**
      * 특정 월 기준 챌린지 목록 조회
@@ -106,7 +111,7 @@ public class ChallengeService {
             throw new BusinessException(ErrorCode.CHALLENGE_ALREADY_JOINED);
         }
 
-        DifficultyCode difficultyCode = parseDifficulty(request == null ? null : request.getDifficultyCode());
+        DifficultyCode difficultyCode = parseDifficulty(request.getDifficultyCode());
         GoalType goalType = parseGoalType(challenge.getGoalType());
 
         ChallengeRule rule = challengeRuleMapper.findByChallengeIdAndDifficulty(
@@ -120,11 +125,16 @@ public class ChallengeService {
         int requiredSuccessDays = rule.getRequiredSuccessDays();
 
         Double dailyTargetValue = null;
-        if (goalType != GoalType.DAY_COUNT_SIMPLE) {
-            dailyTargetValue = rule.getDailyTargetValue();
-            if (dailyTargetValue == null) {
+        if (goalType == GoalType.PROTEIN_PER_DAY) {
+            Double factor = rule.getDailyTargetValue(); // g/kg 계수(0.8/1.0/1.2)
+            if (factor == null) {
                 throw new BusinessException(ErrorCode.CHALLENGE_RULE_INVALID);
             }
+
+            double weightKg = resolveCurrentWeightKg(email);
+            dailyTargetValue = weightKg * factor;
+        } else {
+            dailyTargetValue = null;
         }
 
         ChallengeParticipant participant = ChallengeParticipant.newJoin(
@@ -309,5 +319,14 @@ public class ChallengeService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "goalType이 올바르지 않습니다.");
         }
+    }
+
+    /**
+     * 단백질 챌린지 개인 목표 계산용: 현재 체중 조회 (없으면 기본값)
+     */
+    private double resolveCurrentWeightKg(String email) {
+        Double weight = profileMapper.findCurrentWeightByEmail(email);
+        if (weight == null || weight <= 0) return DEFAULT_WEIGHT_KG;
+        return weight;
     }
 }

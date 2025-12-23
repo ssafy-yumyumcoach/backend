@@ -5,7 +5,9 @@ import com.yumyumcoach.domain.challenge.entity.ChallengeParticipant;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 공용 챌린지 참여 정보(challenge_participants) 테이블용 MyBatis Mapper.
@@ -94,4 +96,28 @@ public interface ChallengeParticipantMapper {
      */
     int countByChallengeId(@Param("challengeId") Long challengeId);
 
+    int countDietSuccessDays(
+            @Param("email") String email,
+            @Param("startAt") LocalDateTime startAt,
+            @Param("endAt") LocalDateTime endAt
+    );
+
+    int countExerciseSuccessDays(
+            @Param("email") String email,
+            @Param("startAt") LocalDateTime startAt,
+            @Param("endAt") LocalDateTime endAt
+    );
+
+    int countProteinSuccessDays(
+            @Param("email") String email,
+            @Param("startAt") LocalDateTime startAt,
+            @Param("endAt") LocalDateTime endAt,
+            @Param("dailyTarget") double dailyTarget
+    );
+
+    List<Long> findRunningJoinedChallengeIdsByGoalTypes(
+            @Param("email") String email,
+            @Param("targetDate") LocalDate targetDate,
+            @Param("goalTypes") List<String> goalTypes
+    );
 }

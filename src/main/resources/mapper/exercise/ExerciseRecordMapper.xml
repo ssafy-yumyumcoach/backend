@@ -58,7 +58,7 @@
     <update id="update" parameterType="com.yumyumcoach.domain.exercise.entity.ExerciseRecord">
         UPDATE exercise_records
         SET exercise_id      = #{exerciseId},
-            recorded_At      = #{recordedAt},
+            recorded_at      = #{recordedAt},
             duration_minutes = #{durationMinutes},
             calories         = #{calories}
         WHERE id = #{id}

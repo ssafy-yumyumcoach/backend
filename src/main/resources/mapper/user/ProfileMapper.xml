@@ -107,4 +107,11 @@
         WHERE a.id = #{userId}
     </select>
 
+    <!-- 내 몸무게 조회 -->
+    <select id="findCurrentWeightByEmail" resultType="double">
+        SELECT current_weight
+        FROM profiles
+        WHERE email = #{email}
+    </select>
+
 </mapper>
