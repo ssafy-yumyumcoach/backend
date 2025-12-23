@@ -1,6 +1,7 @@
 package com.yumyumcoach.domain.diet.service;
 
 import com.yumyumcoach.domain.ai.event.NutritionReviewRequestedEvent;
+import com.yumyumcoach.domain.challenge.service.ChallengeProgressTriggerService;
 import com.yumyumcoach.domain.diet.dto.CreateDietRecordRequest;
 import com.yumyumcoach.domain.diet.dto.DietRecordDto;
 import com.yumyumcoach.domain.diet.mapper.DietFoodMapper;
@@ -23,6 +24,7 @@ public class DietRecordService {
     private final DietRecordMapper dietRecordMapper;
     private final DietFoodMapper dietFoodMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final ChallengeProgressTriggerService challengeProgressTriggerService;
 
     @Transactional(readOnly = true)
     public List<DietRecordDto> getMyDiets(String email, LocalDate date, int page, int size) {
@@ -52,6 +54,8 @@ public class DietRecordService {
             dietFoodMapper.insertDietFoods(dietId, request.getItems());
         }
 
+        challengeProgressTriggerService.onDietChanged(email, request.getRecordedAt());
+
         LocalDate anchor = request.getRecordedAt().toLocalDate();
         eventPublisher.publishEvent(new NutritionReviewRequestedEvent(email, anchor));
         return dietId;
@@ -67,15 +71,17 @@ public class DietRecordService {
             throw new BusinessException(ErrorCode.DIET_FORBIDDEN);
         }
 
-        LocalDateTime recorededAt = dietRecordMapper.selectRecordedAtByIdAndEmail(dietId, email);
-        if (recorededAt == null) throw new BusinessException(ErrorCode.DIET_FORBIDDEN);
-        LocalDate anchor = recorededAt.toLocalDate();
+        LocalDateTime recordedAt = dietRecordMapper.selectRecordedAtByIdAndEmail(dietId, email);
+        if (recordedAt == null) throw new BusinessException(ErrorCode.DIET_FORBIDDEN);
+        LocalDate anchor = recordedAt.toLocalDate();
 
         dietFoodMapper.deleteDietFoodsByDietId(dietId);
         int deleted = dietRecordMapper.deleteDietRecord(dietId, email);
         if (deleted == 0) {
             throw new BusinessException(ErrorCode.DIET_NOT_FOUND);
         }
+
+        challengeProgressTriggerService.onDietChanged(email, recordedAt);
 
         eventPublisher.publishEvent(new NutritionReviewRequestedEvent(email, anchor));
     }
@@ -89,17 +95,29 @@ public class DietRecordService {
         if (!owner.equals(email)) {
             throw new BusinessException(ErrorCode.DIET_FORBIDDEN);
         }
+        LocalDateTime beforeRecordedAt = dietRecordMapper.selectRecordedAtByIdAndEmail(dietId, email);
+        if (beforeRecordedAt == null) {
+            throw new BusinessException(ErrorCode.DIET_FORBIDDEN);
+        }
+
         int updated = dietRecordMapper.updateDietRecord(dietId, email, request);
         if (updated == 0) {
             throw new BusinessException(ErrorCode.DIET_NOT_FOUND);
         }
-        // 음식 항목 재구성: 일단 모두 삭제 후 재삽입 (간단 전략)
+
         dietFoodMapper.deleteDietFoodsByDietId(dietId);
         if (request.getItems() != null && !request.getItems().isEmpty()) {
             dietFoodMapper.insertDietFoods(dietId, request.getItems());
         }
 
-        LocalDate anchor = request.getRecordedAt().toLocalDate();
+        LocalDateTime afterRecordedAt = request.getRecordedAt();
+
+        challengeProgressTriggerService.onDietChanged(email, beforeRecordedAt);
+        if (!afterRecordedAt.toLocalDate().isEqual(beforeRecordedAt.toLocalDate())) {
+            challengeProgressTriggerService.onDietChanged(email, afterRecordedAt);
+        }
+
+        LocalDate anchor = afterRecordedAt.toLocalDate();
         eventPublisher.publishEvent(new NutritionReviewRequestedEvent(email, anchor));
     }
 }

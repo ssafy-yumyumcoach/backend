@@ -111,4 +111,56 @@
         WHERE challenge_id = #{challengeId}
     </select>
 
+    <select id="countDietSuccessDays" resultType="int">
+        SELECT COUNT(*) FROM (
+        SELECT DATE(dr.recorded_at) AS d
+        FROM diet_records dr
+        WHERE dr.email = #{email}
+        AND dr.recorded_at >= #{startAt}
+        AND dr.recorded_at &lt;  #{endAt}
+        GROUP BY d
+        ) t
+    </select>
+
+    <select id="countExerciseSuccessDays" resultType="int">
+        SELECT COUNT(*) FROM (
+        SELECT DATE(er.recorded_at) AS d
+        FROM exercise_records er
+        WHERE er.email = #{email}
+        AND er.recorded_at >= #{startAt}
+        AND er.recorded_at &lt;  #{endAt}
+        GROUP BY d
+        ) t
+    </select>
+
+    <select id="countProteinSuccessDays" resultType="int">
+        SELECT COUNT(*) FROM (
+        SELECT
+        DATE(dr.recorded_at) AS d,
+        SUM(df.serve_count * f.protein) AS total_protein
+        FROM diet_records dr
+        JOIN diet_foods df ON df.diet_id = dr.id
+        JOIN foods f ON f.id = df.food_id
+        WHERE dr.email = #{email}
+        AND dr.recorded_at >= #{startAt}
+        AND dr.recorded_at &lt;  #{endAt}
+        GROUP BY d
+        HAVING total_protein >= #{dailyTarget}
+        ) t
+    </select>
+
+    <select id="findRunningJoinedChallengeIdsByGoalTypes" resultType="long">
+        SELECT cp.challenge_id
+        FROM challenge_participants cp
+        JOIN challenges c ON c.id = cp.challenge_id
+        WHERE cp.email = #{email}
+        AND cp.status = 'joined'
+        AND c.is_active = 1
+        AND c.start_date &lt;= #{targetDate}
+        AND c.end_date &gt;= #{targetDate}
+        AND c.goal_type IN
+        <foreach collection="goalTypes" item="gt" open="(" separator="," close=")">
+            #{gt}
+        </foreach>
+    </select>
 </mapper>

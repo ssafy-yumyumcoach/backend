@@ -1,7 +1,7 @@
 package com.yumyumcoach.domain.exercise.service;
 
 import com.yumyumcoach.domain.ai.event.ExerciseReviewRequestedEvent;
-import com.yumyumcoach.domain.ai.service.AiBackgroundJobService;
+import com.yumyumcoach.domain.challenge.service.ChallengeProgressTriggerService;
 import com.yumyumcoach.domain.exercise.dto.*;
 import com.yumyumcoach.domain.exercise.entity.Exercise;
 import com.yumyumcoach.domain.exercise.entity.ExerciseRecord;
@@ -33,6 +33,7 @@ public class ExerciseService {
     private final ExerciseRecordMapper exerciseRecordMapper;
     private final ProfileMapper profileMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final ChallengeProgressTriggerService challengeProgressTriggerService;
 
     private static final int MIN_KEYWORD_LENGTH = 2;
     private static final int SIZE_LIMIT = 10;
@@ -66,7 +67,11 @@ public class ExerciseService {
                 .map(req -> createExerciseRecord(email, req))
                 .toList();
 
-        LocalDate anchor = requests.get(requests.size() - 1).getRecordedAt().toLocalDate();
+        LocalDateTime recordedAt = requests.get(0).getRecordedAt();
+
+        challengeProgressTriggerService.onExerciseChanged(email, recordedAt);
+
+        LocalDate anchor = recordedAt.toLocalDate();
         eventPublisher.publishEvent(new ExerciseReviewRequestedEvent(email, anchor));
 
         return result;
@@ -75,6 +80,12 @@ public class ExerciseService {
     @Transactional
     public ExerciseRecordResponse updateMyExerciseRecord(String email, Long recordId, ExerciseRecordRequest request) {
         checkRecordOwnerOrThrow(email, recordId);
+
+        ExerciseRecordWithExercise before = exerciseRecordMapper.findDetailByIdAndEmail(recordId, email);
+        if (before == null) {
+            throw new BusinessException(ErrorCode.EXERCISE_RECORD_NOT_FOUND);
+        }
+        LocalDateTime beforeRecordedAt = before.getRecordedAt();
 
         double calories = calculateCalories(email, request.getExerciseId(), request.getDurationMinutes());
 
@@ -89,8 +100,16 @@ public class ExerciseService {
 
         exerciseRecordMapper.update(exerciseRecord);
 
-        LocalDate anchor = request.getRecordedAt().toLocalDate();
+        LocalDateTime afterRecordedAt = request.getRecordedAt();
+
+        challengeProgressTriggerService.onExerciseChanged(email, beforeRecordedAt);
+        if (!afterRecordedAt.toLocalDate().isEqual(beforeRecordedAt.toLocalDate())) {
+            challengeProgressTriggerService.onExerciseChanged(email, afterRecordedAt);
+        }
+
+        LocalDate anchor = afterRecordedAt.toLocalDate();
         eventPublisher.publishEvent(new ExerciseReviewRequestedEvent(email, anchor));
+
         return getMyExerciseRecordDetail(email, recordId);
     }
 
@@ -100,7 +119,7 @@ public class ExerciseService {
         ExerciseRecordWithExercise before = exerciseRecordMapper.findDetailByIdAndEmail(recordId, email);
         if (before == null) throw new BusinessException(ErrorCode.EXERCISE_RECORD_NOT_FOUND);
         exerciseRecordMapper.delete(recordId, email);
-
+        challengeProgressTriggerService.onExerciseChanged(email, before.getRecordedAt());
         LocalDate anchor = before.getRecordedAt().toLocalDate();
         eventPublisher.publishEvent(new ExerciseReviewRequestedEvent(email, anchor));
         return DeleteExerciseRecordResponse.builder()
