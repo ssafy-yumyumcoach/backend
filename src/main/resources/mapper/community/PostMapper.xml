@@ -34,7 +34,7 @@
         WHERE p.id = #{postId}
     </select>
 
-    <!-- 목록 조회 (페이징) -->
+    <!-- 전체 게시글 목록 조회 (페이징) -->
     <select id="findPosts" parameterType="map" resultMap="PostResultMap">
         SELECT
             p.id,
@@ -58,6 +58,33 @@
         SELECT COUNT(*)
         FROM posts
         <!-- [TODO] keyword 조건 나중에 추가 -->
+    </select>
+
+    <!-- 내 게시글 목록 조회 -->
+    <select id="findMyPosts" resultMap="PostResultMap">
+        SELECT
+            p.id,
+            p.author_email,
+            a.id AS author_id,
+            a.username AS author_username,
+            pr.profile_image_url AS author_profile_image_url,
+            p.title,
+            p.content,
+            p.created_at,
+            p.likes
+        FROM posts p
+                 JOIN accounts a ON a.email = p.author_email
+                 LEFT JOIN profiles pr ON pr.email = p.author_email
+        WHERE p.author_email = #{email}
+        ORDER BY p.created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 내 게시글 개수 -->
+    <select id="countMyPosts" resultType="long">
+        SELECT COUNT(*)
+        FROM posts p
+        WHERE p.author_email = #{email}
     </select>
 
     <!-- INSERT -->

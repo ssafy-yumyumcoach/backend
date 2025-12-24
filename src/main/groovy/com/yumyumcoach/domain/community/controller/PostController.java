@@ -28,6 +28,13 @@ public class PostController {
         return postService.getPosts(request, email);
     }
 
+    // 내 게시글 목록 조회
+    @GetMapping("/me")
+    public GetPostsResponse getMyPosts(@ModelAttribute GetPostsRequest request) {
+        String email = CurrentUser.email();
+        return postService.getMyPosts(request, email);
+    }
+
     // 게시글 상세 조회
     @GetMapping("/{postId}")
     public PostResponse getPost(@PathVariable("postId") Long postId) {
