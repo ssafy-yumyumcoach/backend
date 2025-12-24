@@ -112,6 +112,71 @@ public class PostService {
     }
 
     /**
+     * 내 게시글 목록(피드) 조회
+     * - GET /api/posts/me
+     */
+    public GetPostsResponse getMyPosts(GetPostsRequest request, String loginUserEmail) {
+        int page = request.getPage();
+        int size = request.getSize();
+        int offset = (page - 1) * size;
+
+        String keyword = request.getKeyword();
+        String sort = request.getSort();
+
+        List<Post> posts = postMapper.findMyPosts(loginUserEmail, offset, size, keyword, sort);
+
+        long totalCount = postMapper.countMyPosts(loginUserEmail, keyword);
+
+        if (posts.isEmpty()) {
+            return GetPostsResponse.builder()
+                    .page(page).size(size)
+                    .totalCount(totalCount)
+                    .posts(Collections.emptyList())
+                    .build();
+        }
+
+        // 이하 Post -> PostResponse 매핑 로직은 기존 getPosts() 그대로 재사용
+        List<PostResponse> postResponses = posts.stream()
+                .map(post -> {
+                    Long postId = post.getId();
+
+                    List<String> imageUrls = postImageMapper.findByPostId(postId).stream()
+                            .map(PostImage::getImageUrl)
+                            .map(cdnUrlResolver::resolve)
+                            .toList();
+
+                    long commentCount = postCommentMapper.countByPostId(postId);
+                    int likeCount = post.getLikes();
+
+                    boolean isLikedByMe = postLikeMapper.existsByPostIdAndAuthorEmail(postId, loginUserEmail);
+
+                    return PostResponse.builder()
+                            .postId(postId)
+                            .authorId(post.getAuthorId())
+                            .authorUsername(post.getAuthorUsername())
+                            .authorProfileImageUrl(
+                                    post.getAuthorProfileImageUrl() == null ? null : cdnUrlResolver.resolve(post.getAuthorProfileImageUrl())
+                            )
+                            .title(post.getTitle())
+                            .content(post.getContent())
+                            .images(imageUrls)
+                            .likeCount(likeCount)
+                            .commentCount((int) commentCount)
+                            .isLikedByMe(isLikedByMe)
+                            .createdAt(post.getCreatedAt())
+                            .updatedAt(null)
+                            .build();
+                }).toList();
+
+        return GetPostsResponse.builder()
+                .page(page)
+                .size(size)
+                .totalCount(totalCount)
+                .posts(postResponses)
+                .build();
+    }
+
+    /**
      * 게시글 상세 조회
      * - GET /api/posts/{postId}
      */

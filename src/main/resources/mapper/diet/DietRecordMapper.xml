@@ -30,7 +30,7 @@
     <select id="selectDietRecordDetail" resultMap="DietRecordDetailMap">
         SELECT
             dr.id,
-            DATE(dr.recorded_at) AS recorded_at,
+            dr.recorded_at AS recorded_at,
             dr.meal_type,
             dr.image_url,
             df.id          AS diet_food_id,
@@ -55,7 +55,7 @@
     <select id="selectDietRecordsByUser" resultType="com.yumyumcoach.domain.diet.dto.DietRecordDto">
         SELECT
             id,
-            DATE(recorded_at) AS recordedAt,
+            recorded_at AS recordedAt,
             meal_type         AS mealType,
             image_url         AS imageUrl
         FROM diet_records

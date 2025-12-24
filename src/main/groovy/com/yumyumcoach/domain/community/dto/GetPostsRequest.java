@@ -1,15 +1,13 @@
 package com.yumyumcoach.domain.community.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * 전체 게시글 목록 조회 요청 DTO.
  * - GET /api/posts
  */
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,10 +19,10 @@ public class GetPostsRequest {
     private int page = 1;
 
     /**
-     * 페이지 사이즈 (기본값 20)
+     * 페이지 사이즈 (기본값 10)
      */
     @Builder.Default
-    private int size = 20;
+    private int size = 10;
 
     /**
      * [TODO] 검색 키워드

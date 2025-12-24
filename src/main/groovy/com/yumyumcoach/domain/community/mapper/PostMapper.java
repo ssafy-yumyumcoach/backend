@@ -17,6 +17,15 @@ public interface PostMapper {
 
     long countPosts(@Param("keyword") String keyword);
 
+    List<Post> findMyPosts(@Param("email") String email,
+                           @Param("offset") int offset,
+                           @Param("size") int size,
+                           @Param("keyword") String keyword,
+                           @Param("sort") String sort);
+
+    long countMyPosts(@Param("email") String email,
+                      @Param("keyword") String keyword);
+
     void insert(Post post);
 
     void update(Post post);
