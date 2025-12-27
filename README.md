@@ -1,5 +1,5 @@
 # YumYumCoach Backend
-SSAFY 14기 관통프로젝트 백엔드 API 서버입니다.
+식단·운동 기록과 AI 추천을 제공하는 SSAFY 14기 관통프로젝트 백엔드 API 서버입니다. 
 
 ## 기술 스택
 - Spring Boot 4, Java 17, Groovy
