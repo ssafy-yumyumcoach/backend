@@ -10,6 +10,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ssafy
     depends_on:
       - mysql
+      - redis
     networks:
       - yumyumcoach-network
 
@@ -26,6 +27,15 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks:
+      - yumyumcoach-network
+
+  redis:
+    image: redis:7
+    container_name: yumyumcoach-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
     networks:
       - yumyumcoach-network
 

@@ -15,20 +15,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   UNIQUE KEY uq_accounts_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 2) refresh_tokens (중복 제거, 1회만)
-CREATE TABLE IF NOT EXISTS refresh_tokens (
-  email VARCHAR(255) NOT NULL,
-  token_hash CHAR(64) NOT NULL,
-  expires_at DATETIME NOT NULL,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (email),
-  UNIQUE KEY uk_refresh_email_hash (email, token_hash),
-  KEY idx_refresh_expires (expires_at),
-  CONSTRAINT fk_refresh_email
-    FOREIGN KEY (email) REFERENCES accounts(email) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- 3) titles
+-- 2) titles
 CREATE TABLE IF NOT EXISTS titles (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
@@ -37,7 +24,7 @@ CREATE TABLE IF NOT EXISTS titles (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 4) profiles (최종: name 삭제 + profile_image_url/birth_date 추가)
+-- 3) profiles (최종: name 삭제 + profile_image_url/birth_date 추가)
 CREATE TABLE IF NOT EXISTS profiles (
   email VARCHAR(255) NOT NULL,
   introduction VARCHAR(255) DEFAULT NULL,
@@ -64,7 +51,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     FOREIGN KEY (display_title_id) REFERENCES titles(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 5) posts
+-- 4) posts
 CREATE TABLE IF NOT EXISTS posts (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   author_email VARCHAR(255) NOT NULL,
@@ -78,7 +65,7 @@ CREATE TABLE IF NOT EXISTS posts (
     FOREIGN KEY (author_email) REFERENCES accounts(email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 6) post_images
+-- 5) post_images
 CREATE TABLE IF NOT EXISTS post_images (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   post_id BIGINT UNSIGNED NOT NULL,
@@ -90,7 +77,7 @@ CREATE TABLE IF NOT EXISTS post_images (
     FOREIGN KEY (post_id) REFERENCES posts(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 7) post_comments
+-- 6) post_comments
 CREATE TABLE IF NOT EXISTS post_comments (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   post_id BIGINT UNSIGNED NOT NULL,
@@ -104,7 +91,7 @@ CREATE TABLE IF NOT EXISTS post_comments (
     FOREIGN KEY (author_email) REFERENCES accounts(email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 8) post_likes (중복 제거, 최종 1회만)
+-- 7) post_likes (중복 제거, 최종 1회만)
 CREATE TABLE IF NOT EXISTS post_likes (
   post_id BIGINT UNSIGNED NOT NULL,
   email VARCHAR(255) NOT NULL,
@@ -117,7 +104,7 @@ CREATE TABLE IF NOT EXISTS post_likes (
     FOREIGN KEY (email) REFERENCES accounts(email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 9) diet_records
+-- 8) diet_records
 CREATE TABLE IF NOT EXISTS diet_records (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   email VARCHAR(255) NOT NULL,
@@ -129,7 +116,7 @@ CREATE TABLE IF NOT EXISTS diet_records (
     FOREIGN KEY (email) REFERENCES accounts(email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 10) foods
+-- 9) foods
 CREATE TABLE IF NOT EXISTS foods (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
@@ -140,7 +127,7 @@ CREATE TABLE IF NOT EXISTS foods (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 11) diet_foods (최종: weight -> serve_count)
+-- 10) diet_foods (최종: weight -> serve_count)
 CREATE TABLE IF NOT EXISTS diet_foods (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   diet_id BIGINT UNSIGNED NOT NULL,
@@ -155,7 +142,7 @@ CREATE TABLE IF NOT EXISTS diet_foods (
     FOREIGN KEY (food_id) REFERENCES foods(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 12) exercises
+-- 11) exercises
 CREATE TABLE IF NOT EXISTS exercises (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
@@ -166,7 +153,7 @@ CREATE TABLE IF NOT EXISTS exercises (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 13) exercise_records
+-- 12) exercise_records
 CREATE TABLE IF NOT EXISTS exercise_records (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   email VARCHAR(255) NOT NULL,
@@ -182,7 +169,7 @@ CREATE TABLE IF NOT EXISTS exercise_records (
     FOREIGN KEY (exercise_id) REFERENCES exercises(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 14) challenge_difficulties (남아있음: challenge_rules/participants가 사용)
+-- 13) challenge_difficulties (남아있음: challenge_rules/participants가 사용)
 CREATE TABLE IF NOT EXISTS challenge_difficulties (
   code VARCHAR(255) NOT NULL,
   name VARCHAR(255) NOT NULL,
@@ -190,7 +177,7 @@ CREATE TABLE IF NOT EXISTS challenge_difficulties (
   PRIMARY KEY (code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 15) challenges (최종: type_code/difficulty_code 제거 + recruit/end/goal_type/challenge_type 반영)
+-- 14) challenges (최종: type_code/difficulty_code 제거 + recruit/end/goal_type/challenge_type 반영)
 CREATE TABLE IF NOT EXISTS challenges (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   reward_title_id BIGINT UNSIGNED DEFAULT NULL,
@@ -217,7 +204,7 @@ CREATE TABLE IF NOT EXISTS challenges (
     FOREIGN KEY (reward_title_id) REFERENCES titles(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 16) challenge_rules  ✅ (오타/문법만 수정)
+-- 15) challenge_rules  ✅ (오타/문법만 수정)
 CREATE TABLE IF NOT EXISTS challenge_rules (
   challenge_id BIGINT UNSIGNED NOT NULL,
   difficulty_code VARCHAR(255) NOT NULL,
@@ -233,7 +220,7 @@ CREATE TABLE IF NOT EXISTS challenge_rules (
     FOREIGN KEY (reward_title_id) REFERENCES titles(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 17) challenge_participants (최종: difficulty/required/daily + success_days)
+-- 16) challenge_participants (최종: difficulty/required/daily + success_days)
 CREATE TABLE IF NOT EXISTS challenge_participants (
   challenge_id BIGINT UNSIGNED NOT NULL,
   email VARCHAR(255) NOT NULL,
@@ -260,7 +247,7 @@ CREATE TABLE IF NOT EXISTS challenge_participants (
     FOREIGN KEY (difficulty_code) REFERENCES challenge_difficulties(code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 18) account_titles
+-- 17) account_titles
 CREATE TABLE IF NOT EXISTS account_titles (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   title_id BIGINT UNSIGNED NOT NULL,
@@ -277,7 +264,7 @@ CREATE TABLE IF NOT EXISTS account_titles (
     FOREIGN KEY (source_challenge_id) REFERENCES challenges(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 19) follows
+-- 18) follows
 CREATE TABLE IF NOT EXISTS follows (
   follower_email VARCHAR(255) NOT NULL,
   followee_email VARCHAR(255) NOT NULL,
@@ -289,7 +276,7 @@ CREATE TABLE IF NOT EXISTS follows (
     FOREIGN KEY (followee_email) REFERENCES accounts(email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 20) ai_meal_plans
+-- 19) ai_meal_plans
 CREATE TABLE IF NOT EXISTS ai_meal_plans (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     email VARCHAR(255) NOT NULL,
@@ -314,7 +301,7 @@ CREATE TABLE IF NOT EXISTS ai_meal_plans (
     CONSTRAINT fk_ai_meal_plan_email FOREIGN KEY (email) REFERENCES accounts(email) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 21) ai_nutrition_week_reviews
+-- 20) ai_nutrition_week_reviews
 CREATE TABLE IF NOT EXISTS ai_nutrition_week_reviews (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     email VARCHAR(255) NOT NULL,
@@ -335,7 +322,7 @@ CREATE TABLE IF NOT EXISTS ai_nutrition_week_reviews (
     CONSTRAINT fk_ai_nutrition_email FOREIGN KEY (email) REFERENCES accounts(email) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 22) ai_exercise_week_reviews
+-- 21) ai_exercise_week_reviews
 CREATE TABLE IF NOT EXISTS ai_exercise_week_reviews (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     email VARCHAR(255) NOT NULL,
@@ -354,7 +341,7 @@ CREATE TABLE IF NOT EXISTS ai_exercise_week_reviews (
     CONSTRAINT fk_ai_exercise_email FOREIGN KEY (email) REFERENCES accounts(email) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 23) ai_chat_conversations
+-- 22) ai_chat_conversations
 CREATE TABLE IF NOT EXISTS ai_chat_conversations (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     email VARCHAR(255) NOT NULL,
@@ -365,7 +352,7 @@ CREATE TABLE IF NOT EXISTS ai_chat_conversations (
     CONSTRAINT fk_ai_chat_conversation_email FOREIGN KEY (email) REFERENCES accounts(email) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 24) ai_chat_messages
+-- 23) ai_chat_messages
 CREATE TABLE IF NOT EXISTS ai_chat_messages (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     conversation_id BIGINT UNSIGNED NOT NULL,
@@ -380,7 +367,7 @@ CREATE TABLE IF NOT EXISTS ai_chat_messages (
     CONSTRAINT fk_ai_chat_message_conversation FOREIGN KEY (conversation_id) REFERENCES ai_chat_conversations(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 25) ai_chat_jobs
+-- 24) ai_chat_jobs
 CREATE TABLE IF NOT EXISTS ai_chat_jobs (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     conversation_id BIGINT UNSIGNED NOT NULL,
