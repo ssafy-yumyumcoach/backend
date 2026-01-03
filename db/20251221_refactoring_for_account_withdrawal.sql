@@ -45,7 +45,6 @@ CALL reset_email_fk('diet_records',           'email',          'fk_diet_records
 CALL reset_email_fk('exercise_records',       'email',          'fk_exercise_records_account');
 CALL reset_email_fk('post_likes',              'email',          'fk_post_likes_account');
 CALL reset_email_fk('profiles',                'email',          'fk_profiles_account');
-CALL reset_email_fk('refresh_tokens',          'email',          'fk_refresh_email');
 
 -- follows는 email 컬럼이 2개라 별도 처리
 CALL reset_email_fk('follows', 'followee_email', 'fk_follows_followee');

@@ -2,9 +2,8 @@ package com.yumyumcoach.domain.auth.service;
 
 import com.yumyumcoach.domain.auth.dto.*;
 import com.yumyumcoach.domain.auth.entity.Account;
-import com.yumyumcoach.domain.auth.entity.RefreshToken;
 import com.yumyumcoach.domain.auth.mapper.AccountMapper;
-import com.yumyumcoach.domain.auth.mapper.RefreshTokenMapper;
+import com.yumyumcoach.domain.auth.repository.RefreshTokenRedisRepository;
 import com.yumyumcoach.domain.community.mapper.PostCommentMapper;
 import com.yumyumcoach.domain.community.mapper.PostMapper;
 import com.yumyumcoach.domain.user.mapper.ProfileMapper;
@@ -18,9 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.regex.Pattern;
-
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -31,7 +27,7 @@ public class AuthService {
     private final ProfileMapper profileMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final RefreshTokenMapper refreshTokenMapper;
+    private final RefreshTokenRedisRepository refreshTokenRedisRepository;
     private final PostMapper postMapper;
     private final PostCommentMapper postCommentMapper;
 
@@ -94,7 +90,7 @@ public class AuthService {
         String emailFromToken = validateTokenOwnership(authenticatedEmail, refreshToken);
 
         // refresh token 삭제
-        deleteRefreshToken(refreshToken, emailFromToken);
+        deleteRefreshToken(refreshToken);
 
         return new SignOutResponse("로그아웃 되었습니다.");
     }
@@ -140,7 +136,7 @@ public class AuthService {
         }
 
         // refresh token 삭제
-        deleteRefreshToken(request.getRefreshToken(), emailFromToken);
+        deleteRefreshToken(request.getRefreshToken());
 
         // 커뮤니티 컨텐츠(게시글/댓글) 작성자 이메일을 시스템 탈퇴 계정으로 치환
         postCommentMapper.replaceAuthorEmail(authenticatedEmail, DELETED_SYSTEM_EMAIL);
@@ -152,6 +148,8 @@ public class AuthService {
         return new WithdrawResponse("회원탈퇴가 완료되었습니다.");
     }
 
+    // access token 만료 시 refresh token 검증 후
+    // 새 access token 과 refresh token 재발급
     @Transactional
     public RefreshResponse refreshTokens(RefreshRequest request) {
 
@@ -164,8 +162,8 @@ public class AuthService {
         blockIfDeletedSystemEmail(emailFromToken);
         String tokenHash = TokenHashUtil.sha256Hex(request.getRefreshToken());
 
-        RefreshToken savedToken = refreshTokenMapper.findByEmailAndHash(emailFromToken, tokenHash);
-        if (savedToken == null) {
+        String emailFromRedis = refreshTokenRedisRepository.findEmailByHash(tokenHash);
+        if (emailFromRedis == null || !emailFromRedis.equals(emailFromToken)) {
             throw new BusinessException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
         }
 
@@ -175,6 +173,8 @@ public class AuthService {
 
         // 새 refresh token 해시로 교체(회전)
         saveRefreshToken(emailFromToken, newRefreshToken);
+        // 기존 refresh token 삭제
+        deleteRefreshToken(request.getRefreshToken());
 
         return new RefreshResponse(
                 newAccessToken,
@@ -193,9 +193,8 @@ public class AuthService {
 
     private void saveRefreshToken(String email, String refreshToken) {
         String tokenHash = TokenHashUtil.sha256Hex(refreshToken);
-        LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(jwtTokenProvider.getRefreshTokenExpirationSeconds());
-        refreshTokenMapper.upsert(email, tokenHash, expiresAt);
+        long ttlSeconds = jwtTokenProvider.getRefreshTokenExpirationSeconds();
+        refreshTokenRedisRepository.save(tokenHash, email, ttlSeconds);
     }
 
     private static void checkRefreshTokenPresence(String refreshToken) {
@@ -212,10 +211,10 @@ public class AuthService {
         return emailFromToken;
     }
 
-    private void deleteRefreshToken(String refreshToken, String emailFromToken) {
+    private void deleteRefreshToken(String refreshToken) {
         String tokenHash = TokenHashUtil.sha256Hex(refreshToken);
-        int deleted = refreshTokenMapper.deleteByEmailAndHash(emailFromToken, tokenHash);
-        if (deleted == 0) {
+        boolean deleted = refreshTokenRedisRepository.deleteByHash(tokenHash);
+        if (!deleted) {
             throw new BusinessException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
         }
     }
